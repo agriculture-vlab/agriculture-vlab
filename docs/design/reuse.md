@@ -6,7 +6,6 @@
 
 ## Software used in exploitation subsystem
 
-
 | Name              | Version | Purpose                                                  | License      | URL                                              |
 | ----------------- | ------- | -------------------------------------------------------- | ------------ | ------------------------------------------------ |
 | affine            | 2.2     | Perform affine transformations of geographic data        | BSD 3-clause | <https://github.com/rasterio/affine>             |
@@ -20,6 +19,7 @@
 | fsspec            | 2021.6  | File-system interface layer                              | BSD 3-clause | <https://github.com/intake/filesystem_spec>      |
 | gdal              | 3.0     | Geospatial data format conversion                        | MIT          | <https://gdal.org/>                              |
 | geopandas         | 0.8     | Geospatial extensions for the pandas library             | BSD 3-clause | <https://geopandas.org/>                         |
+| helm              | 3.7.0   | Package manager for kubernetes                           | Apache 2.0   | <https://helm.sh/>                               |
 | jdcal             | 1.4.1   | Conversion between Julian and calendar dates             | BSD 2-clause | <https://github.com/phn/jdcal>                   |
 | jsonschema        | 3.2.0   | Validation of JSON data                                  | MIT          | <https://json-schema.org/>                       |
 | jupyterhub        | 1.4.2   | Multi-user server for Jupyter notebooks                  | BSD 3-clause | <https://jupyter.org/hub>                        |
@@ -27,6 +27,7 @@
 | kubernetes        | 1.22.2  | Container workload deployment, scaling, and operation    | Apache 2.0   | <https://kubernetes.io/>                         |
 | mamba             | 0.7.0   | Python package management                                | BSD 3-clause | <https://github.com/mamba-org/mamba>             |
 | matplotlib-base   | 3.0     | Data visualization                                       | Matplotlib   | <https://matplotlib.org/>                        |
+| mkdocs            | 1.2     | Format and build documentation                           | BSD 2-clause | <https://www.mkdocs.org/>                        |
 | netcdf4           | 1.5.0   | Reading and writing NetCDF files                         | MIT          | <https://github.com/Unidata/netcdf4-python>      |
 | numba             | 0.52    | Just-in-time compilation of Python code                  | BSD 2-clause | <https://numba.pydata.org/>                      |
 | numpy             | 1.16    | Numerical, scientific, and mathematical functions        | BSD 3-clause | <https://numpy.org/>                             |
