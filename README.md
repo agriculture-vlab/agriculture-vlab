@@ -1,3 +1,5 @@
+[![Documentation Status](https://readthedocs.org/projects/agriculture-vlab/badge/?version=latest)](https://agriculture-vlab.readthedocs.io/en/latest/?badge=latest)
+
 # Agriculture Virtual Lab (AVL)
 
 This repository provides the documentation and a dedicated Python API for the 
