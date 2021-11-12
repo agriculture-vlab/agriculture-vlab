@@ -7,10 +7,6 @@ build:
   tools:
     python: "3.9"
 
-formats:
-  - pdf
-  - epub
-
 python:
   install:
   - method: pip
