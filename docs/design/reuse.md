@@ -2,7 +2,11 @@
 
 ## Software used in thematic processing subsystem
 
-<!-- TODO (CC): compile list for TAO -->
+---
+
+🚧 **TODO TODO_CC** : compile list for TAO 🚧
+
+---
 
 ## Software used in exploitation subsystem
 
