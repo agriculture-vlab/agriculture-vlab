@@ -95,7 +95,7 @@ to use dimensions `lat`, `lon` - in this order.
 
 #### Regular grid mappings
 
-In case the spatial grid mapping is regular, the spatial dimensions should 
+If the spatial grid mapping is regular, the spatial dimensions should 
 have corresponding 1-D coordinate variables using the same name. That is, 
 datasets with spatial dimensions `x`, `y` should provide the 1-D coordinate 
 variables `x` and `y`. Spatial coordinates must follow the 
