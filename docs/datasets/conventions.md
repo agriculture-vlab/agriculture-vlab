@@ -111,7 +111,7 @@ If the coordinate variables and their 1-D dimensions are named `lon` and `lat`,
 this implies a geographic coordinate reference system. 
 If the coordinate variables and their 1-D dimensions are named `x` and `y`, 
 this indicates either a geographic or projected CRS, indicated by the
-CRS encoding described in the  [CF Conventions on Grid Mapping]. This 
+CRS encoding described in the [CF Conventions on Grid Mapping]. This 
 requires adding an extra variable named `crs` or `spatial_ref` to the datasets
 and refer to it using the `grid_mapping` attribute in the global attributes
 or the attributes of data variables.
