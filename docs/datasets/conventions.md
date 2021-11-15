@@ -90,7 +90,7 @@ attributes are used, they should be covered by the [CF Conventions v1.8].
 
 The spatial dimensions of a data variable must be the innermost dimensions, 
 namely `y`, `x` - in this order. If the coordinate reference system (CRS) 
-is geographic (CRS is `EPGS:4326`, `WGS84` or `CRS84`) it is ok and common 
+is geographic (e.g. CRS is `EPGS:4326`, `WGS84` or `CRS84`) it is ok and common 
 to use dimensions `lat`, `lon` - in this order.
 
 #### Regular grid mappings
