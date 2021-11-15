@@ -105,7 +105,7 @@ The 1-D coordinates of regular grids should have a uniform spacing, i.e. there
 should be a unique linear mapping between coordinate values and the spatial 
 image grid. This implies strictly monotonically increasing or decreasing 
 coordinate values. Ideally, the spacing should also be the same in 
-x- and y-direction. 
+the x and y directions.
 
 If the coordinate variables and their 1-D dimensions are named `lon` and `lat`, 
 this implies a geographic coordinate reference system. 
