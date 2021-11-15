@@ -89,27 +89,46 @@ attributes are used, they should be covered by the [CF Conventions v1.8].
 ### Spatial Reference
 
 The spatial dimensions of a data variable must be the innermost dimensions, 
-namely `lat`, `lon` for geographic (EPGS:4326, WGS-84) grids, and `y`, `x` 
-for other grids – in this order.
-Datasets that use a geographic (EPGS:4326, WGS-84) grid must provide the 
-1-D coordinates `lat` for dimension `lat` and `lon` for dimension `lon`.
-Datasets that use a non-geographic grid must provide the 1-D coordinates 
-`y` for dimension `y` and `x` for dimension `x`. 
+namely `y`, `x` - in this order. If the coordinate reference system (CRS) 
+is geographic (e.g. CRS is `EPGS:4326`, `WGS84` or `CRS84`) it is ok and common 
+to use dimensions `lat`, `lon` - in this order.
 
-* In case the grid refers to a known spatial reference system (projected CRS), 
-  it must make use of the CRS encoding described in the 
-  [CF Conventions on Grid Mapping], i.e. add a variable `crs`.
-* In case the grid is referring to satellite viewing geometry must provide 
-  2-D coordinates `lat` and `lon` both having the dimensions `y`, `x` – 
-  in exactly this order, and apply the [CF Conventions on 2-D Lat and Lon].
+#### Regular grid mappings
 
-It is expected that the 1-D coordinates have a uniform spacing, i.e. there 
-should be a unique linear mapping between coordinate values and the image grid. 
-Ideally, the spacing should also be the same in x- and y-direction.
-Note, it is always a good practice to add geographic coordinates to 
-non-geographic, projected grids. Therefore, a dataset may also provide the 2-D 
-coordinates `lat` and `lon` in this case. Spatial coordinates must follow 
-the [CF Conventions on Coordinates].
+If the spatial grid mapping is regular, the spatial dimensions should 
+have corresponding 1-D coordinate variables using the same name. That is, 
+datasets with spatial dimensions `x`, `y` should provide the 1-D coordinate 
+variables `x` and `y`. Spatial coordinates must follow the 
+[CF Conventions on Coordinates].
+
+The 1-D coordinates of regular grids should have a uniform spacing, i.e. there 
+should be a unique linear mapping between coordinate values and the spatial 
+image grid. This implies strictly monotonically increasing or decreasing 
+coordinate values. Ideally, the spacing should also be the same in 
+the x and y directions.
+
+If the coordinate variables and their 1-D dimensions are named `lon` and `lat`, 
+this implies a geographic coordinate reference system. 
+If the coordinate variables and their 1-D dimensions are named `x` and `y`, 
+this indicates either a geographic or projected CRS, indicated by the
+CRS encoding described in the [CF Conventions on Grid Mapping]. This 
+requires adding an extra variable named `crs` or `spatial_ref` to the datasets
+and refer to it using the `grid_mapping` attribute in the global attributes
+or the attributes of data variables.
+
+For non-geographic, projected grids, if space is not a problem, is it a 
+common practice to also add 2-D geographic coordinate variables `lat` and `lon`
+(WGS-84 implied) both having the dimensions `y`, `x` - in this order.
+See also [CF Conventions on 2-D Lat and Lon].
+
+#### Irregular grid mappings 
+
+For irregular grids, the only spatial reference is provided by 2-D coordinate 
+variables `lat` and `lon` (WGS-84 implied) both having the dimensions 
+`y`, `x` - in this order. A typical use case is a dataset where images are 
+provided in satellite viewing geometry. 
+See also [CF Conventions on 2-D Lat and Lon].
+
 
 [CF Conventions on Grid Mapping]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#grid-mappings-and-projections
 [CF Conventions on 2-D Lat and Lon]: https://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html#_two_dimensional_latitude_longitude_coordinate_variables
@@ -121,7 +140,7 @@ The temporal dimension of a data variables should be named `time`. It should be
 the variable’s outermost dimension. A corresponding coordinate named `time` 
 must exists and the [CF Conventions on the Time Coordinate] must be applied.
 For datasets generated within AVL, it is recommended to use the unit 
-`seconds since 1970.01.01`.
+`seconds since 1970-01-01T00:00:00` UTC.
 
 Data variables may contain other dimensions in between the temporal dimension 
 and the spatial dimensions, i.e. a variable’s dimensions may be 
