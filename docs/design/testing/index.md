@@ -2,7 +2,9 @@
 
 ---
 
-🚧 **TODO TODO_PL** : intro to tests, links to exploitation and TAO parts 🚧
+🚧 **TODO TODO_PL** : write introduction 🚧
 
 ---
 
+1. [Test procedures for the processing system](processing.md)
+2. [Test procedures for the exploitation system](exploitation.md)
