@@ -21,7 +21,7 @@ nav:
     - Processing System Design: design/processing/index.md
     - Development: design/development.md
     - Software Reuse: design/reuse.md
-    - Testing: design/testing.md
+    - Testing: design/testing/index.md
   - About:
     - Project: about/index.md
     - License: about/license.md
