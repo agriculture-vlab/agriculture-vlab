@@ -8,7 +8,11 @@ nav:
   - Home: index.md
   - User Guide:
     - Overview: guide/index.md
-    - Exploitation System Guide: guide/exploitation/index.md
+    - Exploitation System Guide:
+      - Introduction: guide/exploitation/index.md
+      - JupyterLab: guide/exploitation/jupyter.md
+      - Catalogue: guide/exploitation/catalogue.md
+      - Viewer: guide/exploitation/viewer.md
     - Processing System Guide: guide/processing/index.md
     - Tools Index: guide/tools.md
     - Python API Reference: guide/python-api.md
@@ -17,11 +21,14 @@ nav:
     - Conventions: datasets/conventions.md
   - Design:
     - Overview: design/index.md
-    - Exploitation System Design: design/exploitation/index.md
+    - Exploitation System: design/exploitation/index.md
     - Processing System Design: design/processing/index.md
     - Development: design/development.md
     - Software Reuse: design/reuse.md
-    - Testing: design/testing/index.md
+    - Testing:
+      - Introduction:  design/testing/index.md
+      - Exploitation system: design/testing/exploitation.md
+      - Processing system: design/testing/processing.md
   - About:
     - Project: about/index.md
     - License: about/license.md
