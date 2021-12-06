@@ -19,7 +19,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-import collections
+import collections.abc
 from typing import Any, List, Union, Dict, Tuple, Callable
 
 import numpy as np
@@ -61,7 +61,7 @@ Rule = Callable[[xr.Dataset], List[Issue]]
 
 
 def verify_dataset(
-        dataset: Union[str, collections.Mapping, xr.Dataset],
+        dataset: Union[str, collections.abc.Mapping, xr.Dataset],
         level: str = 'ERROR',
         open_params: Dict[str, Any] = None
 ) -> List[Issue]:
