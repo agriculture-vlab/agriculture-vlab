@@ -22,7 +22,8 @@ nav:
     - Radar datasets: datasets/radar.md
   - Design:
     - Overview: design/index.md
-    - Processing System Design: design/processing/index.md
+    - Exploitation system design: design/exploitation/index.md
+    - Processing system design: design/processing/index.md
     - Development: design/development.md
     - Software reuse: design/reuse.md
     - "Testing: Exploitation system": design/testing/exploitation.md
