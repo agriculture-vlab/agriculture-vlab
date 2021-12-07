@@ -7,28 +7,26 @@ theme: readthedocs
 nav:
   - Home: index.md
   - User Guide:
-    - Overview: guide/index.md
-    - Exploitation System Guide:
-      - Introduction: guide/exploitation/index.md
-      - JupyterLab: guide/exploitation/jupyter.md
-      - Catalogue: guide/exploitation/catalogue.md
-      - Viewer: guide/exploitation/viewer.md
+    - "Exploitation System: JupyterLab": guide/exploitation/jupyter.md
+    - "Exploitation Sytem: Catalogue": guide/exploitation/catalogue.md
+    - "Exploitation System: Viewer": guide/exploitation/viewer.md
     - Processing System Guide: guide/processing/index.md
     - Tools Index: guide/tools.md
     - Python API Reference: guide/python-api.md
   - Datasets:
-    - Overview: datasets/index.md
     - Conventions: datasets/conventions.md
+    - Altimetric datasets: datasets/altimetric.md
+    - Atmospheric datasets: datasets/atmospheric.md
+    - Optical datasets: datasets/optical.md
+    - Passive microwave datasets: datasets/passive_microwave.md
+    - Radar datasets: datasets/radar.md
   - Design:
     - Overview: design/index.md
-    - Exploitation System: design/exploitation/index.md
     - Processing System Design: design/processing/index.md
     - Development: design/development.md
-    - Software Reuse: design/reuse.md
-    - Testing:
-      - Introduction:  design/testing/index.md
-      - Exploitation system: design/testing/exploitation.md
-      - Processing system: design/testing/processing.md
+    - Software reuse: design/reuse.md
+    - "Testing: Exploitation system": design/testing/exploitation.md
+    - "Testing: Processing system": design/testing/processing.md
   - About:
     - Project: about/index.md
     - License: about/license.md

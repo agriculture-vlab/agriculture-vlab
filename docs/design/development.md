@@ -41,3 +41,5 @@ The JupyterHub-based exploitation subsystem is deployed on a dedicated
 Kubernetes cluster running on the AWS EKS service. JupyterHub is deployed
 using the [helm](https://helm.sh/) package manager with a chart from the
 [JupyterHub helm chart repository](https://jupyterhub.github.io/helm-chart/).
+Deployment of the exploitation subsystem is fully documented in the operator
+manual.
