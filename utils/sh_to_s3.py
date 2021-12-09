@@ -20,9 +20,9 @@ def sh_to_s3_parts(bbox: Tuple[float, float, float, float],
                    band_names: List[str], destination: str,
                    delay: int):
     start_date, end_date = time_span
-    time_gap = pd.Timedelta('61 minutes')  # more than twice the tolerance
+    time_gap = pd.Timedelta('1 hour')  # avoid duplicate time-points
     start_dates = list(pd.date_range(start=start_date, end=end_date,
-                                     freq='50D', tz='UTC', closed='left'))
+                                     freq='20D', tz='UTC', closed='left'))
     end_dates = (list(map(lambda ts: ts - time_gap, start_dates)) +
                  [pd.to_datetime(end_date, utc=True)])[1:]
     sub_periods = list(zip(start_dates, end_dates))
@@ -38,23 +38,27 @@ def sh_to_s3_parts(bbox: Tuple[float, float, float, float],
         full_path = f'{destination}-{datestring}.zarr'
         zarr_paths.append(full_path)
 
+        for v in sub_cube.data_vars:
+            sub_cube[v].encoding['chunks'] = (2, 1024, 1024)
+            sub_cube[v] = sub_cube[v].chunk(dict(time=2, lat=1024, lon=1024))
         print('Writing Zarr:', full_path)
         # to_zarr seems to specify wrong type for storage_options, so disable
         # type check.
         # noinspection PyTypeChecker
-        sub_cube.to_zarr(full_path,
-                         consolidated=True,
-                         storage_options=dict(
-                             # No key or secret given here. They will be taken
-                             # from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-                             # (or AWS_SESSION_TOKEN) or from .aws/credentials.
-                             client_kwargs=dict(
-                                 region_name='eu-central-1',
-                             ),
-                             s3_additional_kwargs=dict(
-                                 ACL='public-read'
-                             )
-                         ))
+        sub_cube.to_zarr(
+            full_path,
+            consolidated=True,
+            storage_options=dict(
+                # No key or secret given here. They will be taken
+                # from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+                # (or AWS_SESSION_TOKEN) or from .aws/credentials.
+                client_kwargs=dict(
+                    region_name='eu-central-1',
+                ),
+                s3_additional_kwargs=dict(
+                    ACL='public-read'
+                ))
+        )
         print('Zarr written.')
         if delay > 0:
             time.sleep(delay)
@@ -63,17 +67,17 @@ def sh_to_s3_parts(bbox: Tuple[float, float, float, float],
 
 def read_cube_from_sentinel_hub(bbox: Tuple[float, float, float, float],
                                 start_date: str, end_date: str,
-                                spatial_res: float, band_names: List[str]):
+                                spatial_res: float, band_names: List[str])\
+        -> xr.Dataset:
     # SH_CLIENT_ID and SH_CLIENT_SECRET must be set.
     time_range = (start_date, end_date)
     cube_config = CubeConfig(dataset_name='S2L2A',
                              band_names=band_names,
-                             tile_size=(512, 512),
+                             tile_size=(1024, 1024),
                              bbox=bbox,
                              spatial_res=spatial_res,
                              time_range=time_range,
-                             time_period='10D',
-                             time_tolerance='30 minutes')
+                             time_period='10D')
     cube = open_cube(cube_config)
     return cube
 
@@ -95,7 +99,7 @@ def main():
                   'B11', 'B12', 'B8A', 'SCL'],
     )
     time_spans = {
-        'short': ('2019-01-01', '2019-04-30'),
+        'short': ('2019-01-01', '2019-02-28'),
         '2019': ('2019-01-01', '2019-12-31'),
         '2019-2020': ('2019-01-01', '2020-12-31'),
     }

@@ -35,16 +35,21 @@ def combine_s3_parts(zarr_paths: List[str], output):
             ACL='public-read'
         )
     )
+
     for zarr_path in zarr_paths:
-        with xr.open_zarr(zarr_path, consolidated=True,
-                          storage_options=storage_options) as ds:
+        with xr.open_zarr(
+                zarr_path, consolidated=True,
+                storage_options=storage_options
+                if zarr_path.startswith('s3://') else None) as ds:
             print(f'Writing {zarr_path}')
             if first_part:
                 ds.to_zarr(output, consolidated=True, mode='w',
-                           storage_options=storage_options)
+                           storage_options=storage_options if
+                           output.startswith('s3://') else None)
             else:
                 ds.to_zarr(output, consolidated=True, mode='a',
-                           append_dim='time', storage_options=storage_options)
+                           append_dim='time', storage_options=storage_options
+                           if output.startswith('s3://') else None)
         first_part = False
 
 
