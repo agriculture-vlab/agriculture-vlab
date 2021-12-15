@@ -36,20 +36,21 @@ def combine_s3_parts(zarr_paths: List[str], output):
         )
     )
 
+    output_params = dict(consolidated=True)
+    if output.startswith('s3://'):
+        output_params['storage_options'] = storage_options
+
     for zarr_path in zarr_paths:
-        with xr.open_zarr(
-                zarr_path, consolidated=True,
-                storage_options=storage_options
-                if zarr_path.startswith('s3://') else None) as ds:
+        input_params = dict(consolidated=True)
+        if zarr_path.startswith('s3://'):
+            input_params['storage_options'] = storage_options
+        with xr.open_zarr(zarr_path, **input_params) as ds:
             print(f'Writing {zarr_path}')
             if first_part:
-                ds.to_zarr(output, consolidated=True, mode='w',
-                           storage_options=storage_options if
-                           output.startswith('s3://') else None)
+                ds.to_zarr(output, mode='w', **output_params)
             else:
-                ds.to_zarr(output, consolidated=True, mode='a',
-                           append_dim='time', storage_options=storage_options
-                           if output.startswith('s3://') else None)
+                ds.to_zarr(output, mode='a', append_dim='time',
+                           **output_params)
         first_part = False
 
 
