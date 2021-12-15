@@ -1,0 +1,11 @@
+# Configuration for sh_by_band script -- France, 2019, 2 S2 tiles, 9 bands
+
+output_prefix: "s3://agriculture-vlab-data-staging/s2/france/parts/band-"
+dataset_name: "S2L2A"
+tile_size: [1024, 1024]
+bbox: [-3.00, 46.86, -0.20, 47.85]
+spatial_res: 0.00013
+time_range: ["2019-01-01", "2019-12-31"]
+time_period: "10D"
+bands: [ "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B11", "SCL" ]
+rechunk_to: [20, 1024, 1024]

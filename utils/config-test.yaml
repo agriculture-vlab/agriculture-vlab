@@ -1,0 +1,11 @@
+# Configuration for sh_by_band script -- tiny dataset for testing
+
+output_prefix: "s3-test-"
+dataset_name: "S2L2A"
+tile_size: [1024, 1024]
+bbox: [-1.75, 47.28, -1.41, 47.53]
+spatial_res: 0.0013
+time_range: ["2019-01-01", "2019-12-31"]
+time_period: "10D"
+bands: ["B02", "B03"]
+rechunk_to: [20, 1024, 1024]
