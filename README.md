@@ -1,3 +1,4 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/oyq22pd1ysy868rx/branch/main?svg=true)](https://ci.appveyor.com/project/bcdev/agriculture-vlab/branch/main)
 [![Documentation Status](https://readthedocs.org/projects/agriculture-vlab/badge/?version=latest)](https://agriculture-vlab.readthedocs.io/en/latest/?badge=latest)
 
 # Agriculture Virtual Lab (AVL)
