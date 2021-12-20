@@ -84,7 +84,7 @@ def read_cube_from_sentinel_hub(bbox: Tuple[float, float, float, float],
 
 def main():
     bboxes = dict(
-        belgium=(4.44, 49.56, 6.02, 51.44),
+        belgium=(4.38, 49.52, 6.02, 51.45),
         france=(-3.00, 46.86, -0.20, 47.85),
         france_small=(-3.00, 46.86, -1.60, 47.85),
         test=(-1.75, 47.28, -1.41, 47.53),
