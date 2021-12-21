@@ -261,7 +261,6 @@ Zip, e.g. for xarray this is `xarray.open_zarr("./dataset.zarr.zip")`.
 
 * Global WGS-84: [dataset_global.zarr.zip](https://github.com/agriculture-vlab/agriculture-vlab/raw/main/data-samples/dataset_global.zarr.zip)
 * Projected CRS: [dataset_utm33n.zarr.zip](https://github.com/agriculture-vlab/agriculture-vlab/raw/main/data-samples/dataset_utm33n.zarr.zip)
-* Satellite Viewing Geometry: TODO
+<!-- * Satellite Viewing Geometry: TODO -->
 
 <!-- TODO TODO_NF : add satellite viewing geometry example -->
-
