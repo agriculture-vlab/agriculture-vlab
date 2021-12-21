@@ -1,9 +1,4 @@
----
-
-🚧 **TODO TODO_NF** : maintain me 🚧
-
----
-
+<!-- TODO TODO_NF : maintain me -->
 # AVL Dataset Convention
 
 Version 1.2 Draft, 2021-10-27
@@ -268,8 +263,5 @@ Zip, e.g. for xarray this is `xarray.open_zarr("./dataset.zarr.zip")`.
 * Projected CRS: [dataset_utm33n.zarr.zip](https://github.com/agriculture-vlab/agriculture-vlab/raw/main/data-samples/dataset_utm33n.zarr.zip)
 * Satellite Viewing Geometry: TODO
 
----
+<!-- TODO TODO_NF : add satellite viewing geometry example -->
 
-🚧 **TODO TODO_NF** : add satellite viewing geometry example 🚧
-
----
