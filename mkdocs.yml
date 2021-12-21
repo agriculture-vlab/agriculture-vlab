@@ -8,7 +8,7 @@ nav:
   - Home: index.md
   - User Guide:
     - "Exploitation System: JupyterLab": guide/exploitation/jupyter.md
-    - "Exploitation Sytem: Catalogue": guide/exploitation/catalogue.md
+    - "Exploitation System: Catalogue": guide/exploitation/catalogue.md
     - "Exploitation System: Viewer": guide/exploitation/viewer.md
     - Processing System Guide: guide/processing/index.md
     - Tools Index: guide/tools.md
