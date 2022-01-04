@@ -222,7 +222,7 @@ JSON object using the following structure:
 
 ```json
     {
-        "zarr_consolidated_format": 1
+        "zarr_consolidated_format": 1,
         "metadata": {
             ".zattrs": {…},
             ".zgroup": {…},
