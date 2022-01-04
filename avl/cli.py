@@ -177,6 +177,18 @@ def ver(dataset_path: str, level: str):
 
 
 @main.command()
+@click.argument('dataset_list_path', metavar='FILENAME')
+def verreport(dataset_list_path: str):
+    """
+    Write report of dataset validation results.
+    """
+    from .verify import make_report
+
+    report = make_report(dataset_list_path)
+    print(report)
+
+
+@main.command()
 def new():
     """
     Generate AVL sample dataset into current working directory.
