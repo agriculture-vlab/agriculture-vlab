@@ -96,6 +96,21 @@ def verify_dataset(
     return all_issues
 
 
+def make_report(dataset_list_path: str):
+    with open(dataset_list_path, 'r') as fh:
+        ds_paths = list(map(lambda s: s.strip(), fh.readlines()))
+
+    def pass_or_fail(ds_path):
+        return 'PASS' if verify_dataset(ds_path, 'ERROR') == [] \
+               else 'FAIL'
+
+    ds_results = {ds_path: pass_or_fail(ds_path) for ds_path in ds_paths}
+    report = [f'| `{path}` | {result} |\n'
+              for path, result in ds_results.items()]
+    return '| Dataset | Result |\n|----|----|\n' + \
+           ''.join(report)
+
+
 def get_rules() -> List[Rule]:
     return [
         check_global_attrs,
