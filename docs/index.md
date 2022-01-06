@@ -23,8 +23,7 @@ Laboratory, including both the thematic processing and exploitation subsystems,
 and descriptions of the AVL-specific command-line and Python interfaces.
 
 1. [Exploitation subsystem: JupyterLab](guide/exploitation/jupyter.md)
-2. [Exploitation subsystem: xcube viewer](guide/exploitation/viewer.md)
-<!-- 3. [Exploitation subsystem: xcube catalogue](guide/exploitation/catalogue.md) -->
+2. [Exploitation subsystem: xcube viewer](guide/exploitation/viewer.md) <!-- 3. [Exploitation subsystem: xcube catalogue](guide/exploitation/catalogue.md) -->
 3. [Thematic processing subsystem](guide/processing/index.md)
 4. [AVL Python API](guide/python-api.md)
 5. [AVL command-line tools](guide/tools.md)
