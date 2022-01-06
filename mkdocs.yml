@@ -11,7 +11,7 @@ nav:
 #    - "Exploitation System: Catalogue": guide/exploitation/catalogue.md
     - "Exploitation System: Viewer": guide/exploitation/viewer.md
     - Processing System Guide: guide/processing/index.md
-    - Tools Index: guide/tools.md
+    - CLI Tools: guide/tools.md
     - Python API Reference: guide/python-api.md
   - Datasets:
     - Conventions: datasets/conventions.md
