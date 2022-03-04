@@ -18,11 +18,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
-
+import os
 from datetime import datetime
 import json
+from typing import Tuple
+
 import boto3
 import boto3.session
+
+PERMISSIONS_BOUNDARY = "avl-user-permissions-boundary"
 
 
 class AwsResourceCreator:
@@ -85,7 +89,7 @@ class AwsResourceCreator:
         # Create permissions boundary to restrict capabilities od
         # dynamically created bucket users.
         self.iam_client.create_policy(
-            PolicyName="avl-user-permissions-boundary",
+            PolicyName=PERMISSIONS_BOUNDARY,
             PolicyDocument=json.dumps(
                 {
                     "Version": "2012-10-17",
@@ -128,9 +132,9 @@ class AwsResourceCreator:
         )
 
         # Apply a restrictive policy to the "user manager" user. This policy
-        # forces the user manager to apply avl-user-permissions-boundary
-        # to any users it creates, so it can't escalate its permissions
-        # by creating more powerful users.
+        # forces the user manager to apply the permissions boundary to any
+        # users it creates, so it can't escalate its permissions by creating
+        # more powerful users.
         self.iam_client.put_user_policy(
             UserName=user_manager_username,
             PolicyName="aws-user-manager-policy",
@@ -148,7 +152,7 @@ class AwsResourceCreator:
                                 "StringEquals": {
                                     "iam:PermissionsBoundary":
                                         f"{self.aws_account_id}:policy/"
-                                        f"avl-user-permissions-boundary"
+                                        f"{PERMISSIONS_BOUNDARY}"
                                 }
                             },
                         },
@@ -182,3 +186,78 @@ class AwsResourceCreator:
         self.user_manager_key_id = access_key["AccessKey"]["AccessKeyId"]
         self.user_manager_key_secret = access_key["AccessKey"][
             "SecretAccessKey"]
+
+
+class BucketAccessUserCreator:
+
+    def __init__(self, user_name: str, client_id: str, client_secret: str):
+        self.user_name = user_name
+        self.iam_user_name = f"avlbu-{self.user_name}"
+        self.client = boto3.client(
+            service_name="iam",
+            region_name="eu-central-1",
+            aws_access_key_id=client_id,
+            aws_secret_access_key=client_secret
+        )
+
+    def create_user(self) -> Tuple[str, str]:
+        try:
+            self.client.create_user(
+                Path="/avl-bucket-user/",
+                UserName=self.iam_user_name,
+                PermissionsBoundary=PERMISSIONS_BOUNDARY
+            )
+        except self.client.exceptions.EntityAlreadyExistsException:
+            print("User exists; creating new credentials for existing user.")
+        self.add_policy()
+        user_key_id, user_key_secret = self.create_access_key()
+        return user_key_id, user_key_secret
+
+    def create_access_key(self):
+        user_key = self.client.create_access_key(UserName=self.iam_user_name)
+        user_key_id = user_key["AccessKey"]["AccessKeyId"]
+        user_key_secret = user_key["AccessKey"]["SecretAccessKey"]
+        return user_key_id, user_key_secret
+
+    def add_policy(self):
+        user_name = self.user_name
+        policy = json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "AllowList",
+                    "Effect": "Allow",
+                    "Action": ["s3:ListBucket"],
+                    "Resource": [
+                        "arn:aws:s3:::agriculture-vlab-user",
+                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}",
+                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}/*"
+                    ],
+                    "Condition": {
+                        "ForAllValues:StringLike": {
+                            "s3:prefix": [f"{user_name}/", f"{user_name}/*"]
+                        }
+                    }
+                },
+                {
+                    "Sid": "AllowSomeOperations",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:AbortMultipartUpload",
+                        "s3:ListMultipartUploadParts",
+                        "s3:DeleteObject*",
+                        "s3:GetObject*",
+                        "s3:PutObject*"
+                    ],
+                    "Resource": [
+                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}",
+                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}/*"
+                    ]
+                }
+            ]
+        })
+        self.client.put_user_policy(
+            UserName=self.iam_user_name,
+            PolicyName="policy1",
+            PolicyDocument=policy
+        )

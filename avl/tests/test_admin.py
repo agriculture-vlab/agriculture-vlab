@@ -41,3 +41,9 @@ def test_create_resources():
         PolicyName="aws-user-manager-policy"
     )
     assert len(policy_response["PolicyDocument"]) > 0
+
+
+@mock_iam
+def test_bucket_access_user_creator():
+    # TODO
+    pass
