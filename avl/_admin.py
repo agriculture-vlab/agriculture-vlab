@@ -25,7 +25,7 @@ import boto3
 import boto3.session
 
 
-class AvlResourceCreator:
+class AwsResourceCreator:
     def __init__(self, aws_account_number: str):
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where

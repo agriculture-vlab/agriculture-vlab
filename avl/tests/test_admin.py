@@ -13,7 +13,7 @@ def test_create_resources():
     os.environ["AWS_SECURITY_TOKEN"] = "testing"
     os.environ["AWS_SESSION_TOKEN"] = "testing"
 
-    creator = _admin.AvlResourceCreator(aws_account_number="000000000000")
+    creator = _admin.AwsResourceCreator(aws_account_number="000000000000")
     creator.create_resources()
 
     s3_client = boto3.client("s3")
