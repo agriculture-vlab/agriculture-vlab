@@ -7,7 +7,6 @@ from moto import mock_s3, mock_iam
 @mock_s3
 @mock_iam
 def test_create_resources():
-    
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
     os.environ["AWS_SECURITY_TOKEN"] = "testing"
@@ -45,5 +44,6 @@ def test_create_resources():
 
 @mock_iam
 def test_bucket_access_user_creator():
-    # TODO
+    # TODO implement this test
+    # TODO make sure to test the scenario of two pre-existing access keys
     pass

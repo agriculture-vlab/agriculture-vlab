@@ -210,6 +210,8 @@ class BucketAccessUserCreator:
         except self.client.exceptions.EntityAlreadyExistsException:
             print("User exists; creating new credentials for existing user.")
         self.add_policy()
+
+        # TODO Delete the oldest existing access key if two are already present
         user_key_id, user_key_secret = self.create_access_key()
         return user_key_id, user_key_secret
 
