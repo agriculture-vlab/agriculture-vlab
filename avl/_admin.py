@@ -31,8 +31,26 @@ BUCKET_ACCESS_USER_PREFIX = "s3-user"
 
 
 class AwsResourceCreator:
+    """A class to create the AWS resources necessary to run the AVL
+
+    This class automatically creates and configures the buckets needed by the
+    AVL, as well as an IAM "user manager" user with restricted permissions to
+    create temporary users, and a policy to be used as a permissions boundary
+    for the temporary users.
+    """
+
     def __init__(self, aws_account_number: str, creator_tag: str,
                  resource_prefix: str):
+        """Instantiate a new AWS resource creator.
+
+        No AWS resources are created until the create_resources method
+        is called.
+
+        :param aws_account_number: number of AWS account under which resources
+               are to be created
+        :param creator_tag: value for the "creator" tag in created resources
+        :param resource_prefix:
+        """
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
         # boto3 can find them.
@@ -54,10 +72,12 @@ class AwsResourceCreator:
         self.user_manager_key_secret = None
 
     def create_resources(self):
+        """Create all the resources required by AVL"""
         self.create_buckets()
         self.create_users_and_policies()
 
     def create_buckets(self):
+        """Create and configure the S3 buckets required by AVL"""
         bucket_ids = ["user", "data", "data-test", "data-staging", "scratch"]
 
         # Create standard AVL buckets
@@ -88,6 +108,7 @@ class AwsResourceCreator:
         )
 
     def create_users_and_policies(self):
+        """Create IAM users and policies required by AVL"""
         # Create permissions boundary to restrict capabilities of
         # dynamically created bucket users.
         self.iam_client.create_policy(
@@ -191,10 +212,38 @@ class AwsResourceCreator:
 
 
 class BucketAccessUserCreator:
+    """Create temporary IAM users for AVL S3 bucket access
+
+    This class is intended to be used by the Jupyter Hub process when
+    spawning a new user environment. It creates (if not already present)
+    a temporary IAM user with permissions to read and write to the AVL
+    user's prefix in the user bucket, and creates and stores access credentials
+    for this IAM user, which the Jupyter Hub process can then pass to the user
+    environment in environment variables.
+    """
 
     def __init__(self, user_name: str, client_id: str, client_secret: str,
                  aws_account_number: str, creator_tag: str,
                  resource_prefix: str):
+        """Instantiate a new bucket access user creator
+
+        The user is not actually created until the create_user method is called.
+
+        :param user_name: the AVL user name, which will be used as one
+               component of the IAM user name
+        :param client_id: the client ID of the IAM user that will be used to
+               create the temporary user. It is expected that this will be
+               the "user manager" user created during AVL initialization, but
+               any user with sufficient permissions will work.
+        :param client_secret: the client secret associated with the client_id
+               parameter
+        :param aws_account_number: the number of the AWS account hosting the
+               AVL
+        :param creator_tag: the value to be used for the "creator" tag applied
+               to the temporary user
+        :param resource_prefix: prefix to use when constructing the IAM user
+               name from the AVL user name
+        """
         self.user_name = user_name
         self.resource_prefix = resource_prefix
         self.iam_user_name = f"{self.resource_prefix}-" \
@@ -215,6 +264,16 @@ class BucketAccessUserCreator:
         ]
 
     def create_user(self) -> Tuple[str, str]:
+        """Create a temporary bucket access user (if required) and access key
+
+        If the user already exists, a new access key and secret are created.
+        If the user already exists and has more than one existing access key
+        and secret, all but the most recently create key/secret pairs are
+        deleted before creating the new key/secret pair.
+
+        Returns a tuple consisting of a valid access key and access secret
+        for the temporary user.
+        """
         boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
                        f"policy/{PERMISSIONS_BOUNDARY}"
         print(boundary_arn)
@@ -228,7 +287,7 @@ class BucketAccessUserCreator:
         except self.client.exceptions.EntityAlreadyExistsException:
             print("User exists; creating new credentials for existing user.")
             # AWS allows maximum two keys per user, so we make sure that
-            # we have at most one.
+            # we have at most one before trying to create any more.
             self.delete_oldest_access_keys()
         self.add_policy()
 
@@ -236,6 +295,7 @@ class BucketAccessUserCreator:
         return user_key_id, user_key_secret
 
     def delete_oldest_access_keys(self):
+        """Delete all but the most recent access key for the temporary user"""
         list_response = self.client.list_access_keys(
             UserName=self.iam_user_name)
         sorted_keys = sorted(list_response["AccessKeyMetadata"],
@@ -251,12 +311,20 @@ class BucketAccessUserCreator:
         print(sorted_keys)
 
     def create_access_key(self):
+        """Create and return an access key/secret pair for the temporary user"""
         user_key = self.client.create_access_key(UserName=self.iam_user_name)
         user_key_id = user_key["AccessKey"]["AccessKeyId"]
         user_key_secret = user_key["AccessKey"]["SecretAccessKey"]
         return user_key_id, user_key_secret
 
     def add_policy(self):
+        """Apply an inline access policy to the temporary bucket access user
+
+        The policy added by this method allows some standard S3 operations
+        and restricts AVL user bucket access to paths with the user's own
+        prefix. Note that the user's capabilities are also restricted by the
+        permissions boundary applied on user creation.
+        """
         user_name = self.user_name
         policy = json.dumps({
             "Version": "2012-10-17",
