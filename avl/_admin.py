@@ -18,28 +18,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
-import os
-from datetime import datetime
+
 import json
+from datetime import datetime
 from typing import Tuple
 
 import boto3
 import boto3.session
 
-PERMISSIONS_BOUNDARY = "avl-user-permissions-boundary"
+PERMISSIONS_BOUNDARY = "user-permissions-boundary"
+BUCKET_ACCESS_USER_PREFIX = "s3-user"
 
 
 class AwsResourceCreator:
-    def __init__(self, aws_account_number: str):
+    def __init__(self, aws_account_number: str, creator_tag: str,
+                 resource_prefix: str):
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
         # boto3 can find them.
+        self.resource_prefix = resource_prefix
         self.region = "eu-central-1"
         self.session = boto3.session.Session(region_name="eu-central-1")
         self.iam_client = self.session.client(service_name="iam")
         self.s3_client = self.session.client(service_name="s3")
         self.tags = [
-            dict(Key="creator", Value="pont"),
+            dict(Key="creator", Value=creator_tag),
             dict(
                 Key="create-date", Value=datetime.now().strftime(r"%Y-%m-%d")
             ),
@@ -55,12 +58,11 @@ class AwsResourceCreator:
         self.create_users_and_policies()
 
     def create_buckets(self):
-        prefix = "agriculture-vlab-"
         bucket_ids = ["user", "data", "data-test", "data-staging", "scratch"]
 
         # Create standard AVL buckets
         for bucket_id in bucket_ids:
-            bucket_name = prefix + bucket_id
+            bucket_name = self.resource_prefix + "-" + bucket_id
             self.s3_client.create_bucket(
                 Bucket=bucket_name,
                 CreateBucketConfiguration={
@@ -73,7 +75,7 @@ class AwsResourceCreator:
 
         # Apply lifecycle policy to scratch bucket
         self.s3_client.put_bucket_lifecycle_configuration(
-            Bucket=prefix + "scratch",
+            Bucket=self.resource_prefix + "-scratch",
             LifecycleConfiguration={
                 "Rules": [{
                     "Expiration": {"Days": 2},
@@ -86,10 +88,10 @@ class AwsResourceCreator:
         )
 
     def create_users_and_policies(self):
-        # Create permissions boundary to restrict capabilities od
+        # Create permissions boundary to restrict capabilities of
         # dynamically created bucket users.
         self.iam_client.create_policy(
-            PolicyName=PERMISSIONS_BOUNDARY,
+            PolicyName=self.resource_prefix + "-" + PERMISSIONS_BOUNDARY,
             PolicyDocument=json.dumps(
                 {
                     "Version": "2012-10-17",
@@ -106,8 +108,8 @@ class AwsResourceCreator:
                                 "s3:ListBucket",
                             ],
                             "Resource": [
-                                "arn:aws:s3:::agriculture-vlab-user",
-                                "arn:aws:s3:::agriculture-vlab-user/*",
+                                f"arn:aws:s3:::{self.resource_prefix}-user",
+                                f"arn:aws:s3:::{self.resource_prefix}-user/*",
                             ],
                         }
                     ],
@@ -126,7 +128,7 @@ class AwsResourceCreator:
         # Create "user manager" IAM user (used to create the dynamic
         # bucket users)
 
-        user_manager_username = "avl-iam-user-manager"
+        user_manager_username = f"{self.resource_prefix}-user-manager"
         self.iam_client.create_user(
             UserName=user_manager_username, Tags=self.tags
         )
@@ -167,7 +169,7 @@ class AwsResourceCreator:
                                 "iam:DeleteAccessKey",
                             ],
                             "Resource": f"{self.aws_account_id}:user/"
-                                        f"avl-bucket-user/*",
+                                        f"{self.resource_prefix}-bucket-user/*",
                         },
                         {
                             "Sid": "ListUsers",
@@ -190,30 +192,63 @@ class AwsResourceCreator:
 
 class BucketAccessUserCreator:
 
-    def __init__(self, user_name: str, client_id: str, client_secret: str):
+    def __init__(self, user_name: str, client_id: str, client_secret: str,
+                 aws_account_number: str, creator_tag: str,
+                 resource_prefix: str):
         self.user_name = user_name
-        self.iam_user_name = f"avlbu-{self.user_name}"
+        self.resource_prefix = resource_prefix
+        self.iam_user_name = f"{self.resource_prefix}-" \
+                             f"{BUCKET_ACCESS_USER_PREFIX}-{self.user_name}"
+        self.aws_account_number = aws_account_number
         self.client = boto3.client(
             service_name="iam",
             region_name="eu-central-1",
             aws_access_key_id=client_id,
             aws_secret_access_key=client_secret
         )
+        self.tags = [
+            dict(Key="creator", Value=creator_tag),
+            dict(
+                Key="create-date", Value=datetime.now().strftime(r"%Y-%m-%d")
+            ),
+            dict(Key="project", Value="avl"),
+        ]
 
     def create_user(self) -> Tuple[str, str]:
+        boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
+                       f"policy/{PERMISSIONS_BOUNDARY}"
+        print(boundary_arn)
         try:
             self.client.create_user(
-                Path="/avl-bucket-user/",
+                Path=f"/{self.resource_prefix}-{BUCKET_ACCESS_USER_PREFIX}/",
                 UserName=self.iam_user_name,
-                PermissionsBoundary=PERMISSIONS_BOUNDARY
+                PermissionsBoundary=boundary_arn,
+                Tags=self.tags
             )
         except self.client.exceptions.EntityAlreadyExistsException:
             print("User exists; creating new credentials for existing user.")
+            # AWS allows maximum two keys per user, so we make sure that
+            # we have at most one.
+            self.delete_oldest_access_keys()
         self.add_policy()
 
-        # TODO Delete the oldest existing access key if two are already present
         user_key_id, user_key_secret = self.create_access_key()
         return user_key_id, user_key_secret
+
+    def delete_oldest_access_keys(self):
+        list_response = self.client.list_access_keys(
+            UserName=self.iam_user_name)
+        sorted_keys = sorted(list_response["AccessKeyMetadata"],
+                             key=lambda x: x["CreateDate"])
+        for key_record in sorted_keys[:-1]:
+            # Delete all but the most recently created key.
+            # We don't expect >2 in total, but supporting it requires no
+            # additional code.
+            self.client.delete_access_key(
+                UserName=self.iam_user_name,
+                AccessKeyId=key_record["AccessKeyId"]
+            )
+        print(sorted_keys)
 
     def create_access_key(self):
         user_key = self.client.create_access_key(UserName=self.iam_user_name)
@@ -231,9 +266,10 @@ class BucketAccessUserCreator:
                     "Effect": "Allow",
                     "Action": ["s3:ListBucket"],
                     "Resource": [
-                        "arn:aws:s3:::agriculture-vlab-user",
-                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}",
-                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}/*"
+                        f"arn:aws:s3:::{self.resource_prefix}-user",
+                        f"arn:aws:s3:::{self.resource_prefix}-user/{user_name}",
+                        f"arn:aws:s3:::{self.resource_prefix}-"
+                        f"user/{user_name}/*"
                     ],
                     "Condition": {
                         "ForAllValues:StringLike": {
@@ -252,14 +288,15 @@ class BucketAccessUserCreator:
                         "s3:PutObject*"
                     ],
                     "Resource": [
-                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}",
-                        f"arn:aws:s3:::agriculture-vlab-user/{user_name}/*"
+                        f"arn:aws:s3:::{self.resource_prefix}-user/{user_name}",
+                        f"arn:aws:s3:::{self.resource_prefix}-"
+                        f"user/{user_name}/*"
                     ]
                 }
             ]
         })
         self.client.put_user_policy(
             UserName=self.iam_user_name,
-            PolicyName="policy1",
+            PolicyName="avl-buckets-user-access-policy",
             PolicyDocument=policy
         )
