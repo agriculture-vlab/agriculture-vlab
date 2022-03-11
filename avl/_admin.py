@@ -156,9 +156,13 @@ class AwsResourceCreator:
         )
 
         # Apply a restrictive policy to the "user manager" user. This policy
-        # forces the user manager to apply the permissions boundary to any
-        # users it creates, so it can't escalate its permissions by creating
-        # more powerful users.
+        # restricts operations to user IDs under the AVL path, and forces the
+        # user manager to apply the permissions boundary to any users it
+        # creates, so it can't escalate its permissions by creating more
+        # powerful users.
+
+        user_pattern = f"{self.aws_account_id}:user/{self.resource_prefix}-" \
+                       f"{BUCKET_ACCESS_USER_PREFIX}/*"
         self.iam_client.put_user_policy(
             UserName=user_manager_username,
             PolicyName="aws-user-manager-policy",
@@ -170,8 +174,7 @@ class AwsResourceCreator:
                             "Sid": "CreateUsersWithBoundaryAndPath",
                             "Effect": "Allow",
                             "Action": ["iam:CreateUser"],
-                            "Resource": f"{self.aws_account_id}:user/"
-                                        f"avl-bucket-user/*",
+                            "Resource": user_pattern,
                             "Condition": {
                                 "StringEquals": {
                                     "iam:PermissionsBoundary":
@@ -189,9 +192,9 @@ class AwsResourceCreator:
                                 "iam:PutUserPolicy",
                                 "iam:CreateAccessKey",
                                 "iam:DeleteAccessKey",
+                                "iam:ListAccessKeys"
                             ],
-                            "Resource": f"{self.aws_account_id}:user/"
-                                        f"{self.resource_prefix}-bucket-user/*",
+                            "Resource": user_pattern,
                         },
                         {
                             "Sid": "ListUsers",
@@ -218,7 +221,7 @@ class BucketAccessUserCreator:
     This class is intended to be used by the Jupyter Hub process when
     spawning a new user environment. It creates (if not already present)
     a temporary IAM user with permissions to read and write to the AVL
-    user's prefix in the user bucket, and creates and stores access credentials
+    user's prefix in the user bucket, and creates and returns access credentials
     for this IAM user, which the Jupyter Hub process can then pass to the user
     environment in environment variables.
     """
