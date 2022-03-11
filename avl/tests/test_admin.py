@@ -100,17 +100,14 @@ class TestAdmin:
     def test_bucket_access_user_creator_with_existing_credentials(self):
         resource_prefix = "avltest"
         user_name = "fred"
-        creator = _admin.AwsResourceCreator(aws_account_number="000000000000",
-                                            creator_tag="thecreator",
-                                            resource_prefix=resource_prefix)
-        creator.create_resources()
         iam_client = boto3.client("iam")
         self._create_boundary_policy(iam_client)
+        creator_tag = "thecreator"
         creator = BucketAccessUserCreator(user_name=user_name,
                                           client_id="AKIA-dummy",
                                           client_secret="dummy",
                                           aws_account_number="123456789012",
-                                          creator_tag="thecreator",
+                                          creator_tag=creator_tag,
                                           resource_prefix=resource_prefix)
         creator.create_user()
         time.sleep(1)  # make sure the keys have distinct CreateDates

@@ -22,6 +22,7 @@
 import json
 from datetime import datetime
 from typing import Tuple
+import logging
 
 import boto3
 import boto3.session
@@ -276,8 +277,8 @@ class BucketAccessUserCreator:
         """
         boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
                        f"policy/{PERMISSIONS_BOUNDARY}"
-        print(boundary_arn)
         try:
+            logging.info(f"Trying to create new IAM user {self.iam_user_name}.")
             self.client.create_user(
                 Path=f"/{self.resource_prefix}-{BUCKET_ACCESS_USER_PREFIX}/",
                 UserName=self.iam_user_name,
@@ -285,7 +286,8 @@ class BucketAccessUserCreator:
                 Tags=self.tags
             )
         except self.client.exceptions.EntityAlreadyExistsException:
-            print("User exists; creating new credentials for existing user.")
+            logging.info(f"User {self.iam_user_name} exists; creating new "
+                         f"credentials for existing user.")
             # AWS allows maximum two keys per user, so we make sure that
             # we have at most one before trying to create any more.
             self.delete_oldest_access_keys()
@@ -304,11 +306,13 @@ class BucketAccessUserCreator:
             # Delete all but the most recently created key.
             # We don't expect >2 in total, but supporting it requires no
             # additional code.
+            key_id = key_record["AccessKeyId"]
+            logging.info(f"Deleting old access key {key_id} for "
+                         f"{self.iam_user_name}.")
             self.client.delete_access_key(
                 UserName=self.iam_user_name,
-                AccessKeyId=key_record["AccessKeyId"]
+                AccessKeyId=key_id
             )
-        print(sorted_keys)
 
     def create_access_key(self):
         """Create and return an access key/secret pair for the temporary user"""
