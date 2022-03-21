@@ -81,7 +81,7 @@ class TestAdmin:
                                           aws_account_number="123456789012",
                                           creator_tag=creator_tag,
                                           resource_prefix="avltest")
-        access_id, access_secret = creator.create_user()
+        access_id, access_secret = creator.ensure_user_and_create_key()
         assert isinstance(access_id, str)
         assert isinstance(access_secret, str)
 
@@ -109,10 +109,10 @@ class TestAdmin:
                                           aws_account_number="123456789012",
                                           creator_tag=creator_tag,
                                           resource_prefix=resource_prefix)
-        creator.create_user()
+        creator.ensure_user_and_create_key()
         time.sleep(1)  # make sure the keys have distinct CreateDates
-        access_id_2, _ = creator.create_user()
-        access_id_3, _ = creator.create_user()
+        access_id_2, _ = creator.ensure_user_and_create_key()
+        access_id_3, _ = creator.ensure_user_and_create_key()
 
         list_response = iam_client.list_access_keys(
             UserName=f"{resource_prefix}-"

@@ -36,8 +36,8 @@ class AwsResourceCreator:
 
     This class automatically creates and configures the buckets needed by the
     AVL, as well as an IAM "user manager" user with restricted permissions to
-    create temporary users, and a policy to be used as a permissions boundary
-    for the temporary users.
+    create IAM bucket access users, and a policy to be used as a permissions
+    boundary for the bucket access users.
     """
 
     def __init__(self, aws_account_number: str, creator_tag: str,
@@ -50,7 +50,7 @@ class AwsResourceCreator:
         :param aws_account_number: number of AWS account under which resources
                are to be created
         :param creator_tag: value for the "creator" tag in created resources
-        :param resource_prefix:
+        :param resource_prefix: prefix to apply to name of created resources
         """
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
@@ -149,7 +149,6 @@ class AwsResourceCreator:
 
         # Create "user manager" IAM user (used to create the dynamic
         # bucket users)
-
         user_manager_username = f"{self.resource_prefix}-user-manager"
         self.iam_client.create_user(
             UserName=user_manager_username, Tags=self.tags
@@ -160,7 +159,6 @@ class AwsResourceCreator:
         # user manager to apply the permissions boundary to any users it
         # creates, so it can't escalate its permissions by creating more
         # powerful users.
-
         user_pattern = f"{self.aws_account_id}:user/{self.resource_prefix}-" \
                        f"{BUCKET_ACCESS_USER_PREFIX}/*"
         self.iam_client.put_user_policy(
@@ -216,14 +214,23 @@ class AwsResourceCreator:
 
 
 class BucketAccessUserCreator:
-    """Create temporary IAM users for AVL S3 bucket access
+    """Create IAM users and credentials for AVL S3 bucket access
 
     This class is intended to be used by the Jupyter Hub process when
-    spawning a new user environment. It creates (if not already present)
-    a temporary IAM user with permissions to read and write to the AVL
-    user's prefix in the user bucket, and creates and returns access credentials
-    for this IAM user, which the Jupyter Hub process can then pass to the user
-    environment in environment variables.
+    spawning a new user environment. It creates (if not already present) an
+    IAM user with permissions to read and write to the AVL user's prefix in
+    the user bucket, and creates and returns access credentials for this IAM
+    user, which the Jupyter Hub process can then pass to the user environment
+    in environment variables. In this documentation, this IAM user is termed
+    the "bucket access user".
+
+    The design of this class allows for the IAM users to be periodically
+    culled or manually deleted if no corresponding user session is currently
+    active; the ensure_user_and_create_key method will reuse the existing
+    user if it is present, and create a new one on the fly if not. New access
+    credentials are always created; if any access credentials are already
+    present, the most recently created set will be kept in addition to the
+    new credentials.
     """
 
     def __init__(self, user_name: str, client_id: str, client_secret: str,
@@ -231,12 +238,13 @@ class BucketAccessUserCreator:
                  resource_prefix: str):
         """Instantiate a new bucket access user creator
 
-        The user is not actually created until the create_user method is called.
+        No user or access key is created until the ensure_user_and_create_key
+        method is called.
 
         :param user_name: the AVL user name, which will be used as one
                component of the IAM user name
         :param client_id: the client ID of the IAM user that will be used to
-               create the temporary user. It is expected that this will be
+               create the bucket access user. It is expected that this will be
                the "user manager" user created during AVL initialization, but
                any user with sufficient permissions will work.
         :param client_secret: the client secret associated with the client_id
@@ -244,7 +252,7 @@ class BucketAccessUserCreator:
         :param aws_account_number: the number of the AWS account hosting the
                AVL
         :param creator_tag: the value to be used for the "creator" tag applied
-               to the temporary user
+               to the bucket access user
         :param resource_prefix: prefix to use when constructing the IAM user
                name from the AVL user name
         """
@@ -267,16 +275,17 @@ class BucketAccessUserCreator:
             dict(Key="project", Value="avl"),
         ]
 
-    def create_user(self) -> Tuple[str, str]:
-        """Create a temporary bucket access user (if required) and access key
+    def ensure_user_and_create_key(self) -> Tuple[str, str]:
+        """Create an IAM user for bucket access (if needed) and access key
 
-        If the user already exists, a new access key and secret are created.
-        If the user already exists and has more than one existing access key
-        and secret, all but the most recently create key/secret pairs are
-        deleted before creating the new key/secret pair.
+        If the IAM user does not exist, it is created. A new access key and
+        secret are always created and returned. If the user already exists
+        and has more than one existing access key and secret, all but the
+        most recently created key/secret pairs are deleted before creating
+        the new key/secret pair.
 
         Returns a tuple consisting of a valid access key and access secret
-        for the temporary user.
+        for the bucket access user.
         """
         boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
                        f"policy/{PERMISSIONS_BOUNDARY}"
@@ -300,7 +309,7 @@ class BucketAccessUserCreator:
         return user_key_id, user_key_secret
 
     def delete_oldest_access_keys(self):
-        """Delete all but the most recent access key for the temporary user"""
+        """Delete all but the most recent access key for the IAM user"""
         list_response = self.client.list_access_keys(
             UserName=self.iam_user_name)
         sorted_keys = sorted(list_response["AccessKeyMetadata"],
@@ -318,14 +327,14 @@ class BucketAccessUserCreator:
             )
 
     def create_access_key(self):
-        """Create and return an access key/secret pair for the temporary user"""
+        """Create and return an access key/secret pair for the IAM user"""
         user_key = self.client.create_access_key(UserName=self.iam_user_name)
         user_key_id = user_key["AccessKey"]["AccessKeyId"]
         user_key_secret = user_key["AccessKey"]["SecretAccessKey"]
         return user_key_id, user_key_secret
 
     def add_policy(self):
-        """Apply an inline access policy to the temporary bucket access user
+        """Apply an inline access policy to the IAM bucket access user
 
         The policy added by this method allows some standard S3 operations
         and restricts AVL user bucket access to paths with the user's own
