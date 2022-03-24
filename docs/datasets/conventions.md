@@ -264,3 +264,14 @@ Zip, e.g. for xarray this is `xarray.open_zarr("./dataset.zarr.zip")`.
 <!-- * Satellite Viewing Geometry: TODO -->
 
 <!-- TODO TODO_NF : add satellite viewing geometry example -->
+
+## Dataset convention changelog
+
+### Version 1.2 (27.10.2021)
+
+* Added convention section about consolidation of metadata.
+* Added convention section about Zip archives.
+
+### Version 1.0 (24.08.2021)
+
+### Initial draft A (01.07.2021)
