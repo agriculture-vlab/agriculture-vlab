@@ -129,11 +129,11 @@ class AwsResourceCreator:
                             "Effect": "Allow",
                             "Action": [
                                 "s3:AbortMultipartUpload",
-                                "s3:ListMultipartUploadParts",
                                 "s3:DeleteObject*",
                                 "s3:GetObject*",
-                                "s3:PutObject*",
                                 "s3:ListBucket",
+                                "s3:ListMultipartUploadParts",
+                                "s3:PutObject*"
                             ],
                             "Resource": [
                                 f"arn:aws:s3:::{self.resource_prefix}-user",
@@ -183,6 +183,7 @@ class AwsResourceCreator:
                                 "StringEquals": {
                                     "iam:PermissionsBoundary":
                                         f"{self.aws_account_id}:policy/"
+                                        f"{self.resource_prefix}-"
                                         f"{PERMISSIONS_BOUNDARY}"
                                 }
                             },
@@ -191,12 +192,13 @@ class AwsResourceCreator:
                             "Sid": "ManageUsersUnderPath",
                             "Effect": "Allow",
                             "Action": [
-                                "iam:GetUser",
-                                "iam:DeleteUser",
-                                "iam:PutUserPolicy",
                                 "iam:CreateAccessKey",
                                 "iam:DeleteAccessKey",
-                                "iam:ListAccessKeys"
+                                "iam:DeleteUser",
+                                "iam:GetUser",
+                                "iam:ListAccessKeys",
+                                "iam:PutUserPolicy",
+                                "iam:TagUser"
                             ],
                             "Resource": user_pattern,
                         },
@@ -294,7 +296,7 @@ class BucketAccessUserCreator:
         for the bucket access user.
         """
         boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
-                       f"policy/{PERMISSIONS_BOUNDARY}"
+                       f"policy/{self.resource_prefix}-{PERMISSIONS_BOUNDARY}"
         try:
             logging.info(f"Trying to create new IAM user {self.iam_user_name}.")
             self.client.create_user(
@@ -372,9 +374,9 @@ class BucketAccessUserCreator:
                     "Effect": "Allow",
                     "Action": [
                         "s3:AbortMultipartUpload",
-                        "s3:ListMultipartUploadParts",
                         "s3:DeleteObject*",
                         "s3:GetObject*",
+                        "s3:ListMultipartUploadParts",
                         "s3:PutObject*"
                     ],
                     "Resource": [
