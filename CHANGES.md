@@ -1,3 +1,7 @@
+## Changes in version 0.1.2
+
+ * Fix overly restrictive user bucket IAM policy.
+
 ## Changes in version 0.1.1
 
  * Improvements and bugfixes in `_admin` module.
