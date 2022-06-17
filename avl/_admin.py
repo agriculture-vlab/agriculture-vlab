@@ -365,7 +365,12 @@ class BucketAccessUserCreator:
                     ],
                     "Condition": {
                         "ForAllValues:StringLike": {
-                            "s3:prefix": [f"{user_name}/", f"{user_name}/*"]
+                            "s3:prefix": [
+                                f"",
+                                f"{user_name}",
+                                f"{user_name}/",
+                                f"{user_name}/*"
+                            ]
                         }
                     }
                 },
