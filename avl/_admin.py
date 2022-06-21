@@ -138,6 +138,8 @@ class AwsResourceCreator:
                             "Resource": [
                                 f"arn:aws:s3:::{self.resource_prefix}-user",
                                 f"arn:aws:s3:::{self.resource_prefix}-user/*",
+                                f"arn:aws:s3:::{self.resource_prefix}-public",
+                                f"arn:aws:s3:::{self.resource_prefix}-public/*"
                             ],
                         }
                     ],
@@ -386,6 +388,10 @@ class BucketAccessUserCreator:
                     ],
                     "Resource": [
                         f"arn:aws:s3:::{self.resource_prefix}-user/{user_name}",
+                        f"arn:aws:s3:::{self.resource_prefix}-"
+                        f"user/{user_name}/*",
+                        f"arn:aws:s3:::{self.resource_prefix}-"
+                        f"public/{user_name}",
                         f"arn:aws:s3:::{self.resource_prefix}-"
                         f"user/{user_name}/*"
                     ]
