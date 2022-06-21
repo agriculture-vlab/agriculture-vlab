@@ -1,5 +1,9 @@
 ## Changes in version 0.1.2
 
+ * Support public user data bucket in admin module.
+
+## Changes in version 0.1.2
+
  * Fix overly restrictive user bucket IAM policy.
 
 ## Changes in version 0.1.1
