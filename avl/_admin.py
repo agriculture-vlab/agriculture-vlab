@@ -393,7 +393,7 @@ class BucketAccessUserCreator:
                         f"arn:aws:s3:::{self.resource_prefix}-"
                         f"public/{user_name}",
                         f"arn:aws:s3:::{self.resource_prefix}-"
-                        f"user/{user_name}/*"
+                        f"public/{user_name}/*"
                     ]
                 }
             ]
