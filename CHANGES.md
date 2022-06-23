@@ -1,8 +1,8 @@
-## Changes in version 0.1.3
+## Changes in version 0.1.4
 
  * Fix a bug in public user data bucket access policy.
 
-## Changes in version 0.1.2
+## Changes in version 0.1.3
 
  * Support public user data bucket in admin module.
 
