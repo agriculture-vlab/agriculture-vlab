@@ -27,10 +27,10 @@ import pandas as pd
 import pyproj
 import xarray as xr
 
-CRS_CRS84 = pyproj.crs.CRS.from_string("CRS84")
+CRS_CRS84 = pyproj.crs.CRS.from_string('CRS84')
 
 DEFAULT_METADATA = dict(
-    Conventions="CF-1.7",
+    Conventions='CF-1.7',
     title='AVL test dataset',
     summary='This dataset is used to demonstrate the AVL'
             ' common dataset convention',
@@ -53,7 +53,7 @@ def new_dataset(
         time_units: str = 'seconds since 1970-01-01T00:00:00',
         time_calendar: str = 'proleptic_gregorian',
         time_periods: int = 5,
-        time_res: str = "1D",
+        time_res: str = '1D',
         time_start: str = '2010-01-01T00:00:00',
         use_cftime: bool = False,
         drop_bounds: bool = False,

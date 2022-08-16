@@ -136,10 +136,10 @@ def check_time_coord(ds: xr.Dataset) -> List[Issue]:
         for var_name, var in ds.variables.items():
             if time_dim in var.dims and len(var.dims) > 1:
                 if var.dims[0] != time_dim:
-                    issues += _severe(f"first dimension of"
-                                      f" variable {var_name!r}"
-                                      f" must be {time_dim!r},"
-                                      f" but dimensions are {var.dims!r}")
+                    issues += _severe(f'first dimension of'
+                                      f' variable {var_name!r}'
+                                      f' must be {time_dim!r},'
+                                      f' but dimensions are {var.dims!r}')
 
     return issues
 
@@ -189,10 +189,10 @@ def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
         for var_name, var in ds.variables.items():
             if y_dim in var.dims and x_dim in var.dims:
                 if var.dims[-2:] != yx_dims:
-                    issues += _severe(f"last two dimensions of"
-                                      f" variable {var_name!r}"
-                                      f" must be {yx_dims!r},"
-                                      f" but dimensions are {var.dims!r}")
+                    issues += _severe(f'last two dimensions of'
+                                      f' variable {var_name!r}'
+                                      f' must be {yx_dims!r},'
+                                      f' but dimensions are {var.dims!r}')
 
     return issues
 
@@ -203,7 +203,7 @@ def _check_crs(ds, var_name):
         try:
             pyproj.CRS.from_cf(ds[var_name].attrs)
         except pyproj.exceptions.ProjError as e:
-            issues += _severe(f"invalid {var_name!r} variable: {e}")
+            issues += _severe(f'invalid {var_name!r} variable: {e}')
     return issues
 
 
@@ -211,8 +211,8 @@ def _check_1d_coord(ds, var_name):
     var = ds[var_name]
     issues = []
     if var.dims != (var_name,):
-        issues += _severe(f"variable {var_name!r} must"
-                          f" have a single dimension {var_name!r}")
+        issues += _severe(f'variable {var_name!r} must'
+                          f' have a single dimension {var_name!r}')
     return issues
 
 
@@ -223,8 +223,8 @@ def _check_mono_inc(ds, var_name):
     if np.issubdtype(var_diff.dtype, np.timedelta64):
         var_diff = var_diff.astype(np.float64)
     if not np.all(var_diff > 0):
-        issues += _severe(f"values of variable {var_name!r} must be"
-                          " strictly monotonically increasing")
+        issues += _severe(f'values of variable {var_name!r} must be'
+                          ' strictly monotonically increasing')
     return issues
 
 
@@ -233,8 +233,8 @@ def _check_mono_inc_or_dec(ds, var_name):
     var = ds[var_name]
     var_diff = var.diff(dim=var_name)
     if not (np.all(var_diff > 0) or np.all(var_diff < 0)):
-        issues += _severe(f"values of variable {var_name!r} must be"
-                          " strictly monotonically increasing or decreasing")
+        issues += _severe(f'values of variable {var_name!r} must be'
+                          ' strictly monotonically increasing or decreasing')
     return issues
 
 

@@ -30,17 +30,17 @@ def main():
 
 @main.command()
 @click.option('--output', '-o', 'output_dir_path',
-              metavar="OUTPUT_DIR",
-              default=".",
-              help="Output directory. Defaults to current working directory.")
+              metavar='OUTPUT_DIR',
+              default='.',
+              help='Output directory. Defaults to current working directory.')
 @click.option('--file', '-f', 'cache_file_path',
-              metavar="CACHE_FILE",
+              metavar='CACHE_FILE',
               default=None,
-              help="File that holds cached datasets' metadata (JSON format).")
+              help='File that holds cached datasets\' metadata (JSON format).')
 @click.option('--cache', 'write_cache_only',
               is_flag=True,
-              help="Write the CACHE_FILE only and exit."
-                   " Ignored if JSON_FILE is not given.")
+              help='Write the CACHE_FILE only and exit.'
+                   ' Ignored if JSON_FILE is not given.')
 def cat(output_dir_path='.',
         cache_file_path=None,
         write_cache_only=False):
@@ -77,18 +77,18 @@ def cat(output_dir_path='.',
         from xcube.core.store import new_data_store
         import traceback
 
-        store = new_data_store("s3",
+        store = new_data_store('s3',
                                root='agriculture-vlab-data-staging',
                                max_depth=5,
                                storage_options=dict(anon=True))
         descriptors = []
         for data_id in store.get_data_ids():
-            click.echo(f"Fetching descriptor for {data_id!r}...")
+            click.echo(f'Fetching descriptor for {data_id!r}...')
             try:
                 descriptor = store.describe_data(data_id)
                 descriptors.append(descriptor.to_dict())
             except Exception as e:
-                click.echo(f"Error: {e}")
+                click.echo(f'Error: {e}')
                 traceback_lines = list(traceback.format_tb(e.__traceback__))
                 descriptors.append(
                     dict(data_id=data_id,
@@ -111,7 +111,7 @@ def cat(output_dir_path='.',
         datasets_dir = f'{catalogue_dir}/{datasets_dir_name}'
         os.makedirs(datasets_dir, exist_ok=True)
         with open(f'{catalogue_dir}/index.md', 'w') as fp_catalogue:
-            fp_catalogue.write("# AVL Dataset Catalogue\n\n")
+            fp_catalogue.write('# AVL Dataset Catalogue\n\n')
             for descriptor in descriptors:
                 data_id = descriptor.get('data_id', '?')
                 encoded_data_id = data_id.replace('/', '_')
@@ -119,8 +119,8 @@ def cat(output_dir_path='.',
                 abs_data_id_path = f'{catalogue_dir}/{rel_data_id_path}'
                 has_error = 'error' in descriptor
                 fp_catalogue.write(
-                    f"* [{data_id}]({rel_data_id_path})"
-                    f"{' Error!' if has_error else ''}\n"
+                    f'* [{data_id}]({rel_data_id_path})'
+                    f'{' Error!' if has_error else ''}\n'
                 )
                 with open(abs_data_id_path, 'w') as fp_data_id:
                     json.dump(descriptor, fp_data_id, indent=2)
@@ -136,12 +136,12 @@ def cat(output_dir_path='.',
             return load_descriptors_from_store()
 
     def run():
-        click.echo(f"Fetching descriptors...")
+        click.echo(f'Fetching descriptors...')
         descriptors = get_descriptors()
         if not descriptors:
             return
 
-        click.echo(f"Converting {len(descriptors)} descriptors...")
+        click.echo(f'Converting {len(descriptors)} descriptors...')
         write_catalogue(descriptors)
 
     run()
@@ -151,9 +151,9 @@ def cat(output_dir_path='.',
 @click.argument('dataset_path',
                 metavar='DATASET')
 @click.option('--level', '-l',
-              type=click.types.Choice(["ERROR", "WARNING"]),
-              default="WARNING",
-              help="Level of messages to include.")
+              type=click.types.Choice(['ERROR', 'WARNING']),
+              default='WARNING',
+              help='Level of messages to include.')
 def ver(dataset_path: str, level: str):
     """
     Verify given dataset conforms to the AVL dataset convention.
@@ -229,10 +229,10 @@ def new():
             dict(
                 long_name='Variable B',
                 # standard_name='...',  # if exists
-                flag_meanings="quality_good"
-                              " sensor_nonfunctional"
-                              " outside_valid_range",
-                flag_values="1, 2, 3",
+                flag_meanings='quality_good'
+                              ' sensor_nonfunctional'
+                              ' outside_valid_range',
+                flag_values='1, 2, 3',
                 color_bar_name='tab10',
                 color_value_min=0,
                 color_value_max=10

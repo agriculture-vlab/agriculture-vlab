@@ -33,8 +33,8 @@ import logging
 import boto3
 import boto3.session
 
-PERMISSIONS_BOUNDARY = "user-permissions-boundary"
-BUCKET_ACCESS_USER_PREFIX = "s3-user"
+PERMISSIONS_BOUNDARY = 'user-permissions-boundary'
+BUCKET_ACCESS_USER_PREFIX = 's3-user'
 
 
 class AwsResourceCreator:
@@ -62,19 +62,19 @@ class AwsResourceCreator:
         # in .aws/credentials or the equivalent environment variables where
         # boto3 can find them.
         self.resource_prefix = resource_prefix
-        self.region = "eu-central-1"
-        self.session = boto3.session.Session(region_name="eu-central-1")
-        self.iam_client = self.session.client(service_name="iam")
-        self.s3_client = self.session.client(service_name="s3")
+        self.region = 'eu-central-1'
+        self.session = boto3.session.Session(region_name='eu-central-1')
+        self.iam_client = self.session.client(service_name='iam')
+        self.s3_client = self.session.client(service_name='s3')
         self.tags = [
-            dict(Key="creator", Value=creator_tag),
+            dict(Key='creator', Value=creator_tag),
             dict(
-                Key="create-date", Value=datetime.now().strftime(r"%Y-%m-%d")
+                Key='create-date', Value=datetime.now().strftime(r'%Y-%m-%d')
             ),
-            dict(Key="project", Value="avl"),
+            dict(Key='project', Value='avl'),
         ]
         self.aws_account_number = aws_account_number
-        self.aws_account_id = "arn:aws:iam::" + aws_account_number
+        self.aws_account_id = 'arn:aws:iam::' + aws_account_number
         self.user_manager_key_id = None
         self.user_manager_key_secret = None
 
@@ -85,32 +85,32 @@ class AwsResourceCreator:
 
     def create_buckets(self):
         """Create and configure the S3 buckets required by AVL"""
-        bucket_ids = ["user", "data", "data-test", "data-staging", "scratch"]
+        bucket_ids = ['user', 'data', 'data-test', 'data-staging', 'scratch']
 
         # Create standard AVL buckets
         for bucket_id in bucket_ids:
-            bucket_name = self.resource_prefix + "-" + bucket_id
+            bucket_name = self.resource_prefix + '-' + bucket_id
             self.s3_client.create_bucket(
                 Bucket=bucket_name,
                 CreateBucketConfiguration={
-                    "LocationConstraint": "eu-central-1"
+                    'LocationConstraint': 'eu-central-1'
                 },
-                ObjectOwnership="BucketOwnerEnforced",
+                ObjectOwnership='BucketOwnerEnforced',
             )
             self.s3_client.put_bucket_tagging(Bucket=bucket_name,
                                               Tagging=dict(TagSet=self.tags))
 
         # Apply lifecycle policy to scratch bucket
         self.s3_client.put_bucket_lifecycle_configuration(
-            Bucket=self.resource_prefix + "-scratch",
+            Bucket=self.resource_prefix + '-scratch',
             LifecycleConfiguration={
-                "Rules": [{
-                    "Expiration": {"Days": 2},
-                    "ID": "delete-old-objects",
-                    "Filter": {},
-                    "Status": "Enabled",
-                    "AbortIncompleteMultipartUpload":
-                        {"DaysAfterInitiation": 1}}
+                'Rules': [{
+                    'Expiration': {'Days': 2},
+                    'ID': 'delete-old-objects',
+                    'Filter': {},
+                    'Status': 'Enabled',
+                    'AbortIncompleteMultipartUpload':
+                        {'DaysAfterInitiation': 1}}
                 ]},
         )
 
@@ -119,45 +119,45 @@ class AwsResourceCreator:
         # Create permissions boundary to restrict capabilities of
         # dynamically created bucket users.
         self.iam_client.create_policy(
-            PolicyName=self.resource_prefix + "-" + PERMISSIONS_BOUNDARY,
+            PolicyName=self.resource_prefix + '-' + PERMISSIONS_BOUNDARY,
             PolicyDocument=json.dumps(
                 {
-                    "Version": "2012-10-17",
-                    "Statement": [
+                    'Version': '2012-10-17',
+                    'Statement': [
                         {
-                            "Sid": "AllowedOperations",
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:AbortMultipartUpload",
-                                "s3:DeleteObject*",
-                                "s3:GetObject*",
-                                "s3:ListBucket",
-                                "s3:ListMultipartUploadParts",
-                                "s3:PutObject*"
+                            'Sid': 'AllowedOperations',
+                            'Effect': 'Allow',
+                            'Action': [
+                                's3:AbortMultipartUpload',
+                                's3:DeleteObject*',
+                                's3:GetObject*',
+                                's3:ListBucket',
+                                's3:ListMultipartUploadParts',
+                                's3:PutObject*'
                             ],
-                            "Resource": [
-                                f"arn:aws:s3:::{self.resource_prefix}-user",
-                                f"arn:aws:s3:::{self.resource_prefix}-user/*",
-                                f"arn:aws:s3:::{self.resource_prefix}-public",
-                                f"arn:aws:s3:::{self.resource_prefix}-public/*"
+                            'Resource': [
+                                f'arn:aws:s3:::{self.resource_prefix}-user',
+                                f'arn:aws:s3:::{self.resource_prefix}-user/*',
+                                f'arn:aws:s3:::{self.resource_prefix}-public',
+                                f'arn:aws:s3:::{self.resource_prefix}-public/*'
                             ],
                         }
                     ],
                 }
             ),
-            Description="Limit permissions for AVL bucket access users",
+            Description='Limit permissions for AVL bucket access users',
             Tags=self.tags
             + [
                 dict(
-                    Key="purpose",
-                    Value="Limit permissions for AVL bucket access users",
+                    Key='purpose',
+                    Value='Limit permissions for AVL bucket access users',
                 )
             ],
         )
 
         # Create "user manager" IAM user (used to create the dynamic
         # bucket users)
-        user_manager_username = f"{self.resource_prefix}-user-manager"
+        user_manager_username = f'{self.resource_prefix}-user-manager'
         self.iam_client.create_user(
             UserName=user_manager_username, Tags=self.tags
         )
@@ -167,48 +167,48 @@ class AwsResourceCreator:
         # user manager to apply the permissions boundary to any users it
         # creates, so it can't escalate its permissions by creating more
         # powerful users.
-        user_pattern = f"{self.aws_account_id}:user/{self.resource_prefix}-" \
-                       f"{BUCKET_ACCESS_USER_PREFIX}/*"
+        user_pattern = f'{self.aws_account_id}:user/{self.resource_prefix}-' \
+                       f'{BUCKET_ACCESS_USER_PREFIX}/*'
         self.iam_client.put_user_policy(
             UserName=user_manager_username,
-            PolicyName="aws-user-manager-policy",
+            PolicyName='aws-user-manager-policy',
             PolicyDocument=json.dumps(
                 {
-                    "Version": "2012-10-17",
-                    "Statement": [
+                    'Version': '2012-10-17',
+                    'Statement': [
                         {
-                            "Sid": "CreateUsersWithBoundaryAndPath",
-                            "Effect": "Allow",
-                            "Action": ["iam:CreateUser"],
-                            "Resource": user_pattern,
-                            "Condition": {
-                                "StringEquals": {
-                                    "iam:PermissionsBoundary":
-                                        f"{self.aws_account_id}:policy/"
-                                        f"{self.resource_prefix}-"
-                                        f"{PERMISSIONS_BOUNDARY}"
+                            'Sid': 'CreateUsersWithBoundaryAndPath',
+                            'Effect': 'Allow',
+                            'Action': ['iam:CreateUser'],
+                            'Resource': user_pattern,
+                            'Condition': {
+                                'StringEquals': {
+                                    'iam:PermissionsBoundary':
+                                        f'{self.aws_account_id}:policy/'
+                                        f'{self.resource_prefix}-'
+                                        f'{PERMISSIONS_BOUNDARY}'
                                 }
                             },
                         },
                         {
-                            "Sid": "ManageUsersUnderPath",
-                            "Effect": "Allow",
-                            "Action": [
-                                "iam:CreateAccessKey",
-                                "iam:DeleteAccessKey",
-                                "iam:DeleteUser",
-                                "iam:GetUser",
-                                "iam:ListAccessKeys",
-                                "iam:PutUserPolicy",
-                                "iam:TagUser"
+                            'Sid': 'ManageUsersUnderPath',
+                            'Effect': 'Allow',
+                            'Action': [
+                                'iam:CreateAccessKey',
+                                'iam:DeleteAccessKey',
+                                'iam:DeleteUser',
+                                'iam:GetUser',
+                                'iam:ListAccessKeys',
+                                'iam:PutUserPolicy',
+                                'iam:TagUser'
                             ],
-                            "Resource": user_pattern,
+                            'Resource': user_pattern,
                         },
                         {
-                            "Sid": "ListUsers",
-                            "Effect": "Allow",
-                            "Action": ["iam:ListUsers"],
-                            "Resource": "*",
+                            'Sid': 'ListUsers',
+                            'Effect': 'Allow',
+                            'Action': ['iam:ListUsers'],
+                            'Resource': '*',
                         },
                     ],
                 }
@@ -218,9 +218,9 @@ class AwsResourceCreator:
         # Create and store credentials for the "user manager" user.
         access_key = self.iam_client.create_access_key(
             UserName=user_manager_username)
-        self.user_manager_key_id = access_key["AccessKey"]["AccessKeyId"]
-        self.user_manager_key_secret = access_key["AccessKey"][
-            "SecretAccessKey"]
+        self.user_manager_key_id = access_key['AccessKey']['AccessKeyId']
+        self.user_manager_key_secret = access_key['AccessKey'][
+            'SecretAccessKey']
 
 
 class BucketAccessUserCreator:
@@ -268,21 +268,21 @@ class BucketAccessUserCreator:
         """
         self.user_name = user_name
         self.resource_prefix = resource_prefix
-        self.iam_user_name = f"{self.resource_prefix}-" \
-                             f"{BUCKET_ACCESS_USER_PREFIX}-{self.user_name}"
+        self.iam_user_name = f'{self.resource_prefix}-' \
+                             f'{BUCKET_ACCESS_USER_PREFIX}-{self.user_name}'
         self.aws_account_number = aws_account_number
         self.client = boto3.client(
-            service_name="iam",
-            region_name="eu-central-1",
+            service_name='iam',
+            region_name='eu-central-1',
             aws_access_key_id=client_id,
             aws_secret_access_key=client_secret
         )
         self.tags = [
-            dict(Key="creator", Value=creator_tag),
+            dict(Key='creator', Value=creator_tag),
             dict(
-                Key="create-date", Value=datetime.now().strftime(r"%Y-%m-%d")
+                Key='create-date', Value=datetime.now().strftime(r'%Y-%m-%d')
             ),
-            dict(Key="project", Value="avl"),
+            dict(Key='project', Value='avl'),
         ]
 
     def ensure_user_and_create_key(self) -> Tuple[str, str]:
@@ -297,19 +297,19 @@ class BucketAccessUserCreator:
         Returns a tuple consisting of a valid access key and access secret
         for the bucket access user.
         """
-        boundary_arn = f"arn:aws:iam::{self.aws_account_number}:" \
-                       f"policy/{self.resource_prefix}-{PERMISSIONS_BOUNDARY}"
+        boundary_arn = f'arn:aws:iam::{self.aws_account_number}:' \
+                       f'policy/{self.resource_prefix}-{PERMISSIONS_BOUNDARY}'
         try:
-            logging.info(f"Trying to create new IAM user {self.iam_user_name}.")
+            logging.info(f'Trying to create new IAM user {self.iam_user_name}.')
             self.client.create_user(
-                Path=f"/{self.resource_prefix}-{BUCKET_ACCESS_USER_PREFIX}/",
+                Path=f'/{self.resource_prefix}-{BUCKET_ACCESS_USER_PREFIX}/',
                 UserName=self.iam_user_name,
                 PermissionsBoundary=boundary_arn,
                 Tags=self.tags
             )
         except self.client.exceptions.EntityAlreadyExistsException:
-            logging.info(f"User {self.iam_user_name} exists; creating new "
-                         f"credentials for existing user.")
+            logging.info(f'User {self.iam_user_name} exists; creating new '
+                         f'credentials for existing user.')
             # AWS allows maximum two keys per user, so we make sure that
             # we have at most one before trying to create any more.
             self.delete_oldest_access_keys()
@@ -322,15 +322,15 @@ class BucketAccessUserCreator:
         """Delete all but the most recent access key for the IAM user"""
         list_response = self.client.list_access_keys(
             UserName=self.iam_user_name)
-        sorted_keys = sorted(list_response["AccessKeyMetadata"],
-                             key=lambda x: x["CreateDate"])
+        sorted_keys = sorted(list_response['AccessKeyMetadata'],
+                             key=lambda x: x['CreateDate'])
         for key_record in sorted_keys[:-1]:
             # Delete all but the most recently created key.
             # We don't expect >2 in total, but supporting it requires no
             # additional code.
-            key_id = key_record["AccessKeyId"]
-            logging.info(f"Deleting old access key {key_id} for "
-                         f"{self.iam_user_name}.")
+            key_id = key_record['AccessKeyId']
+            logging.info(f'Deleting old access key {key_id} for '
+                         f'{self.iam_user_name}.')
             self.client.delete_access_key(
                 UserName=self.iam_user_name,
                 AccessKeyId=key_id
@@ -339,8 +339,8 @@ class BucketAccessUserCreator:
     def create_access_key(self):
         """Create and return an access key/secret pair for the IAM user"""
         user_key = self.client.create_access_key(UserName=self.iam_user_name)
-        user_key_id = user_key["AccessKey"]["AccessKeyId"]
-        user_key_secret = user_key["AccessKey"]["SecretAccessKey"]
+        user_key_id = user_key['AccessKey']['AccessKeyId']
+        user_key_secret = user_key['AccessKey']['SecretAccessKey']
         return user_key_id, user_key_secret
 
     def add_policy(self):
@@ -353,53 +353,53 @@ class BucketAccessUserCreator:
         """
         user_name = self.user_name
         policy = json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
+            'Version': '2012-10-17',
+            'Statement': [
                 {
-                    "Sid": "AllowList",
-                    "Effect": "Allow",
-                    "Action": ["s3:ListBucket"],
-                    "Resource": [
-                        f"arn:aws:s3:::{self.resource_prefix}-user",
-                        f"arn:aws:s3:::{self.resource_prefix}-user/{user_name}",
-                        f"arn:aws:s3:::{self.resource_prefix}-"
-                        f"user/{user_name}/*"
+                    'Sid': 'AllowList',
+                    'Effect': 'Allow',
+                    'Action': ['s3:ListBucket'],
+                    'Resource': [
+                        f'arn:aws:s3:::{self.resource_prefix}-user',
+                        f'arn:aws:s3:::{self.resource_prefix}-user/{user_name}',
+                        f'arn:aws:s3:::{self.resource_prefix}-'
+                        f'user/{user_name}/*'
                     ],
-                    "Condition": {
-                        "ForAllValues:StringLike": {
-                            "s3:prefix": [
-                                f"",
-                                f"{user_name}",
-                                f"{user_name}/",
-                                f"{user_name}/*"
+                    'Condition': {
+                        'ForAllValues:StringLike': {
+                            's3:prefix': [
+                                f'',
+                                f'{user_name}',
+                                f'{user_name}/',
+                                f'{user_name}/*'
                             ]
                         }
                     }
                 },
                 {
-                    "Sid": "AllowSomeOperations",
-                    "Effect": "Allow",
-                    "Action": [
-                        "s3:AbortMultipartUpload",
-                        "s3:DeleteObject*",
-                        "s3:GetObject*",
-                        "s3:ListMultipartUploadParts",
-                        "s3:PutObject*"
+                    'Sid': 'AllowSomeOperations',
+                    'Effect': 'Allow',
+                    'Action': [
+                        's3:AbortMultipartUpload',
+                        's3:DeleteObject*',
+                        's3:GetObject*',
+                        's3:ListMultipartUploadParts',
+                        's3:PutObject*'
                     ],
-                    "Resource": [
-                        f"arn:aws:s3:::{self.resource_prefix}-user/{user_name}",
-                        f"arn:aws:s3:::{self.resource_prefix}-"
-                        f"user/{user_name}/*",
-                        f"arn:aws:s3:::{self.resource_prefix}-"
-                        f"public/{user_name}",
-                        f"arn:aws:s3:::{self.resource_prefix}-"
-                        f"public/{user_name}/*"
+                    'Resource': [
+                        f'arn:aws:s3:::{self.resource_prefix}-user/{user_name}',
+                        f'arn:aws:s3:::{self.resource_prefix}-'
+                        f'user/{user_name}/*',
+                        f'arn:aws:s3:::{self.resource_prefix}-'
+                        f'public/{user_name}',
+                        f'arn:aws:s3:::{self.resource_prefix}-'
+                        f'public/{user_name}/*'
                     ]
                 }
             ]
         })
         self.client.put_user_policy(
             UserName=self.iam_user_name,
-            PolicyName="avl-buckets-user-access-policy",
+            PolicyName='avl-buckets-user-access-policy',
             PolicyDocument=policy
         )
