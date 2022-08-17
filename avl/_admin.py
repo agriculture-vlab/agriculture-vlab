@@ -128,7 +128,7 @@ class AwsResourceCreator:
                     'Condition': {
                         'StringLike': {
                             'aws:PrincipalArn':
-                                f'arn:aws:iam::{self.aws_account_id}:user/'
+                                f'{self.aws_account_id}:user/'
                                 f'{self.resource_prefix}-s3-user/'
                                 f'{self.resource_prefix}-s3-user-*'
                         }
@@ -195,7 +195,6 @@ class AwsResourceCreator:
                             'Condition': {
                                 'StringLike': {
                                     'aws:PrincipalArn':
-                                        f'arn:aws:iam::'
                                         f'{self.aws_account_id}:user/'
                                         f'{self.resource_prefix}-s3-user/'
                                         f'{self.resource_prefix}-s3-user-*'
