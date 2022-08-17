@@ -38,8 +38,8 @@ class TestAdmin:
         s3_client = boto3.client('s3')
         bucket_response = s3_client.list_buckets()
         expected_buckets = [resource_prefix + '-' + name for name in
-                            ['data', 'data-staging', 'data-test', 'scratch',
-                             'user']]
+                            ['data', 'data-staging', 'data-test', 'public',
+                             'scratch', 'user']]
         buckets = sorted([bucket['Name']
                           for bucket in bucket_response['Buckets']])
         assert expected_buckets == buckets
