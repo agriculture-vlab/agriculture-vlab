@@ -27,7 +27,7 @@ relevant to users.
 
 import json
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List
 import logging
 
 import boto3
@@ -47,7 +47,7 @@ class AwsResourceCreator:
     """
 
     def __init__(self, aws_account_number: str, creator_tag: str,
-                 resource_prefix: str):
+                 resource_prefix: str, data_providers: List[str] = None):
         """Instantiate a new AWS resource creator.
 
         No AWS resources are created until the create_resources method
@@ -57,11 +57,14 @@ class AwsResourceCreator:
                are to be created
         :param creator_tag: value for the "creator" tag in created resources
         :param resource_prefix: prefix to apply to name of created resources
+        :param list of ARN strings of accounts which should have write access
+               to the data, data-staging, and data-test buckets
         """
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
         # boto3 can find them.
         self.resource_prefix = resource_prefix
+        self.data_providers = data_providers
         self.region = 'eu-central-1'
         self.session = boto3.session.Session(region_name='eu-central-1')
         self.iam_client = self.session.client(service_name='iam')
@@ -84,8 +87,10 @@ class AwsResourceCreator:
         self.create_users_and_policies()
 
     def create_buckets(self):
-        """Create and configure the S3 buckets required by AVL"""
-        bucket_ids = ['user', 'data', 'data-test', 'data-staging', 'scratch']
+        """Create (but do not configure) the S3 buckets required by AVL"""
+
+        bucket_ids = ['user', 'public', 'data', 'data-test', 'data-staging',
+                      'scratch']
 
         # Create standard AVL buckets
         for bucket_id in bucket_ids:
@@ -99,6 +104,108 @@ class AwsResourceCreator:
             )
             self.s3_client.put_bucket_tagging(Bucket=bucket_name,
                                               Tagging=dict(TagSet=self.tags))
+
+    def configure_buckets(self):
+        """Apply access and lifecycle policies to AVL buckets"""
+
+        # Apply access policies to data buckets and public user bucket. For
+        # the public user bucket, the bucket policy only handles read access;
+        # write access is managed by the IAM policy. For the non-public user
+        # bucket, there is no bucket policy and access is managed entirely by
+        # the IAM policy.
+        for bucket_id in 'data', 'data-test', 'data-staging', 'public':
+            bucket_name = self.resource_prefix + '-' + bucket_id
+            statement = [
+                {
+                    'Sid': 'AllowReadForAvlUsers',
+                    'Effect': 'Allow',
+                    'Principal': {'AWS': '*'},
+                    'Action': ['s3:Get*', 's3:List*'],
+                    'Resource': [
+                        f'arn:aws:s3:::{bucket_name}',
+                        f'arn:aws:s3:::{bucket_name}/*'
+                    ],
+                    'Condition': {
+                        'StringLike': {
+                            'aws:PrincipalArn':
+                                f'arn:aws:iam::{self.aws_account_id}:user/'
+                                f'{self.resource_prefix}-s3-user/'
+                                f'{self.resource_prefix}-s3-user-*'
+                        }
+                    }
+                }
+            ]
+            if self.data_providers and bucket_id.startswith('data'):
+                statement.append(
+                    {
+                        'Sid': 'AllowReadWriteForDataProviders',
+                        'Effect': 'Allow',
+                        'Principal': {'AWS': self.data_providers},
+                        'Action': [
+                            's3:GetBucketLocation',
+                            's3:GetObject',
+                            's3:ListBucket',
+                            's3:PutObject',
+                            's3:DeleteObject',
+                            's3:ReplicateObject',
+                            's3:PutObjectAcl',
+                            's3:AbortMultipartUpload',
+                            's3:ListBucketMultipartUploads',
+                            's3:ListMultipartUploadParts'
+                        ],
+                        'Resource': [
+                            f'arn:aws:s3:::{bucket_name}',
+                            f'arn:aws:s3:::{bucket_name}/*'
+                        ]
+                    }
+                )
+            self.s3_client.put_bucket_policy(
+                Bucket=bucket_name,
+                Policy=json.dumps(
+                    {
+                        'Version': '2012-10-17',
+                        'Statement': statement
+                    }
+                )
+            )
+
+        # Apply access policy to scratch bucket
+        self.s3_client.put_bucket_policy(
+            Bucket=self.resource_prefix + '-scratch',
+            Policy=json.dumps(
+                {
+                    'Version': '2012-10-17',
+                    'Statement': [
+                        {
+                            'Sid': 'AllowAvlUsers',
+                            'Effect': 'Allow',
+                            'Principal': {
+                                'AWS': '*'
+                            },
+                            'Action': [
+                                's3:Put*',
+                                's3:Get*',
+                                's3:Delete*',
+                                's3:List*'
+                            ],
+                            'Resource': [
+                                f'arn:aws:s3:::{self.resource_prefix}-scratch',
+                                f'arn:aws:s3:::{self.resource_prefix}-scratch/*'
+                            ],
+                            'Condition': {
+                                'StringLike': {
+                                    'aws:PrincipalArn':
+                                        f'arn:aws:iam::'
+                                        f'{self.aws_account_id}:user/'
+                                        f'{self.resource_prefix}-s3-user/'
+                                        f'{self.resource_prefix}-s3-user-*'
+                                }
+                            }
+                        }
+                    ]
+                }
+            )
+        )
 
         # Apply lifecycle policy to scratch bucket
         self.s3_client.put_bucket_lifecycle_configuration(
