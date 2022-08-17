@@ -82,8 +82,9 @@ class AwsResourceCreator:
         self.user_manager_key_secret = None
 
     def create_resources(self):
-        """Create all the resources required by AVL"""
+        """Create and configure all the resources required by AVL"""
         self.create_buckets()
+        self.configure_buckets()
         self.create_users_and_policies()
 
     def create_buckets(self):
