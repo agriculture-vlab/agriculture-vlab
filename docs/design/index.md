@@ -1,6 +1,7 @@
 # AVL System Design
 
 This section describes the system design of the Agricultural Virtual Laboratory.
+
 It comprises two main building blocks, namely the Thematic processing subsystem
 and the Exploitation subsystem, which are based on two existing software
 packages, TAO and the xcube ecosystem, respectively. AVL ingests various data

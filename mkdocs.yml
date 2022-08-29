@@ -21,7 +21,8 @@ nav:
     - Passive microwave datasets: datasets/passive_microwave.md
     - Radar datasets: datasets/radar.md
   - Design:
-    - Overview: design/index.md
+    - Introduction: design/index.md
+    - Overview and common components: design/common.md
     - Exploitation system design: design/exploitation/index.md
     - Processing system design: design/processing/index.md
     - Development: design/development.md
