@@ -1,8 +1,22 @@
-# AVL Processing System Design
+# Thematic processing system design
 
-The thematic processing sub-system is a collection of self-contained (i.e., packed in Docker containers) applications or systems, that produce value-added EO products (such as crop masks, crop types, agricultural practices, etc.).
-The sub-system has at its core the TAO Workflow and Integration engine. TAO (stands for Tool Augmentation by user enhancements and Orchestration) is an open-source (under GPLv3 license) lightweight, generic integration, and distributed orchestration framework. It allows the integration of commonly used toolboxes (such as, but not limited to, SNAP, Orfeo Toolbox, GDAL, etc.) into a single user environment. This framework allows for processing composition and distribution in such a way that end users could define by themselves processing workflows and easily integrate additional processing modules (either standalone executables or Python or R scripts).
-In terms of use, the TAO platform provides a mean for orchestration of heterogeneous processing components and libraries to process remote sensing data. This is achieved in following steps:
+The thematic processing sub-system is a collection of self-contained (i.e.,
+packed in Docker containers) applications or systems, that produce value-added
+EO products (such as crop masks, crop types, agricultural practices, etc.).
+
+The sub-system has at its core the TAO Workflow and Integration engine. TAO
+(stands for Tool Augmentation by user enhancements and Orchestration) is an
+open-source (under GPLv3 license) lightweight, generic integration, and
+distributed orchestration framework. It allows the integration of commonly
+used toolboxes (such as, but not limited to, SNAP, Orfeo Toolbox, GDAL, etc.)
+into a single user environment. This framework allows for processing
+composition and distribution in such a way that end users could define by
+themselves processing workflows and easily integrate additional processing
+modules (either standalone executables or Python or R scripts).
+
+In terms of use, the TAO platform provides a mean for orchestration of
+heterogeneous processing components and libraries to process remote sensing
+data. This is achieved in following steps:
 
  - Preparation of resources (including processing components) and data input,
  - Definition of a workflow as a processing chain,
@@ -12,14 +26,51 @@ In terms of use, the TAO platform provides a mean for orchestration of heterogen
 The following diagram details the AVL Thematic Processing subsystem:
 ![Structure of AVL thematic processing subsystem](../../img/avl-ts.png)
 
-### System Monitoring Dashboard
+## Introduction
 
-#### General
+The thematic processing sub-system is a collection of self-contained
+(i.e., packed in Docker containers) applications or systems, that
+produce value-added EO products (such as crop masks, crop types,
+agricultural practices, etc.).
+
+The sub-system has at its core the TAO Workflow and Integration engine.
+TAO (stands for Tool Augmentation by user enhancements and
+Orchestration) is an open-source (under GPLv3 license) lightweight,
+generic integration, and distributed orchestration framework. It allows
+the integration of commonly used toolboxes (such as, but not limited to,
+**SNAP, Orfeo Toolbox, GDAL,** etc.) into a single user environment.
+This framework allows for processing composition and distribution in
+such a way that end users could define by themselves processing
+workflows and easily integrate additional processing modules (either
+standalone executables or Python or R scripts).
+
+In terms of use, the TAO platform provides a means for orchestration of
+heterogeneous processing components and libraries to process remote
+sensing data. This is achieved in following steps:
+
+- Preparation of resources (including processing components) and data
+  input,
+
+- Definition of a workflow as a processing chain,
+
+- Execution of workflows,
+
+- Retrieval / visualisation / sharing of the results.
+
+The following diagram details the AVL Thematic Processing subsystem
+whose components are described hereafter:
+
+![AVL Thematic Subsystem](./../../img/image3.png)
+**AVL Thematic Subsystem**
+
+## System Monitoring Dashboard
+
+### General
 
 The System Monitoring component (and dashboard) provides real-time
 information about system activities and system resource usage.
 
-#### Function
+### Function
 
 The dashboard monitoring related functions are:
 
@@ -40,27 +91,34 @@ The dashboard monitoring related functions are:
 
 - view the platform statistics – accessible only for AVL administrators.
 
-#### Dependencies
+### Dependencies
 
 The module depends on the Thematic Workflow Engine and Data Cube
 Processing Engine for activity monitoring.
 
-#### Interfaces
+### Interfaces
 
 The module exposes a Java API (for integration with other Java
 components) and a REST API (for usage from heterogeneous clients,
 including web clients).
 
-### User Workspace Manager
+## User Workspace Manager
 
-#### General
+### General
 
 The purpose of the User Workspace Manager component is twofold: it
 ensures the privacy of users (their data is protected from other users)
 and it allows the quota management (the quantity of infrastructure
 resources – such as storage, CPU, memory – a user can use).
 
-#### Function
+### Function
+
+The following functions are performed by this component:
+
+ - View the details about local data products (accessible for both administrator and user roles, with the difference that the user can only view details about his local data products as well as public data products),
+ - Upload additional files that can be further used in workflows (such as model files, shape files, etc.),
+ - Publish (share) data products with other users,
+ - Monitor user quota.
 
 The following functions are performed by this component:
 
@@ -80,12 +138,12 @@ Note: The AVL Toolbox Hub includes its own workspace management. It is,
 however, dependent on the same User Workspace NFS share. For users of
 the AVL system, this will be transparent.
 
-#### Dependencies
+### Dependencies
 
 The workspace manager depends on the User Workspace NFS shares common
 component.
 
-#### Interfaces
+### Interfaces
 
 The module exposes a Java API (for integration with other Java
 components) and a REST API (for usage from heterogeneous clients,
@@ -94,9 +152,53 @@ including web clients).
 Note: The AVL Toolbox service exposes an API (WebSocket-based JSON RPC)
 to let users manage just *their* private workspace.
 
-### Thematic Workflow Engine
+### General
 
-#### General
+The purpose of the User Workspace Manager component is twofold: it
+ensures the privacy of users (their data is protected from other users)
+and it allows the quota management (the quantity of infrastructure
+resources – such as storage, CPU, memory – a user can use).
+
+### Function
+
+The following functions are performed by this component:
+
+- View the details about local data products (accessible for both
+  administrator and user roles, with the difference that the user can
+  only view details about his local data products as well as public
+  data products),
+
+- Upload additional files that can be further used in workflows (such
+  as model files, shape files, etc.),
+
+- Publish (share) data products with other users,
+
+- Monitor user quota.
+
+Note: The AVL Toolbox Hub includes its own workspace management. It is,
+however, dependent on the same User Workspace NFS share. For users of
+the AVL system, this will be transparent.
+
+### Dependencies
+
+The workspace manager depends on the User Workspace NFS shares common
+component.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components) and a REST API (for usage from heterogeneous clients,
+including web clients).
+
+Note: The AVL Toolbox service exposes an API (WebSocket-based JSON RPC)
+to let users manage just *their* private workspace.
+
+## Thematic Workflow Engine
+
+The Thematic Workflow Engine is in charge with execution of workflows by creating and handling jobs and performing the management of the execution steps from a workflow. The purpose of the Orchestration is to allow the execution of a workflow, by creating a job for each workflow execution, splitting and managing the internal components of the workflow in execution tasks.
+
+
+### General
 
 The Thematic Workflow Engine is in charge with execution of workflows by
 creating and handling jobs and performing the management of the
@@ -105,7 +207,7 @@ allow the execution of a workflow, by creating a job for each workflow
 execution, splitting and managing the internal components of the
 workflow in execution tasks.
 
-#### Function
+### Function
 
 The main functionalities realized by this component are:
 
@@ -131,7 +233,7 @@ The main functionalities realized by this component are:
 
 The component is comprised of several constituents:
 
-##### Orchestrator
+#### Orchestrator
 
 This is the component that performs the functionalities above. It uses
 the ExecutionsManager that undertakes the tasks executions,
@@ -141,7 +243,7 @@ steps extraction and decide the next steps to be executed from the
 workflow while the executor is in charge with the effective execution
 and monitoring the execution statuses of the current executing tasks.
 
-##### ExecutionsManager
+#### ExecutionsManager
 
 The ExecutionsManager is in charge of executions of the tasks that the
 Orchestrator needs to perform during a workflow execution. It implements
@@ -221,7 +323,7 @@ following operations:
   a task, the ExecutionsManager will retrieve, if necessary, the full
   log file and will make it available to the user.
 
-##### Executor
+#### Executor
 
 The Executor component is used to execute the tasks command lines via
 the DRMAA interface. It provides the API for:
@@ -244,7 +346,7 @@ framework, AVL will use one of the following two implementations:
 - A process executor using SSH,
 - A Kubernetes executor.
 
-#### Dependencies
+### Dependencies
 
 The Orchestrator depends on the following components:
 
@@ -253,13 +355,13 @@ The Orchestrator depends on the following components:
 
 - The Cluster Manager – for executing the job tasks.
 
-#### Interfaces
+### Interfaces
 
 The module exposes a Java API (for integration with other Java
 components) and a REST API (for usage from heterogeneous clients,
 including web clients).
 
-#### Data
+### Data
 
 The data that the Thematic Workflow Engine is handling is:
 
@@ -275,237 +377,7 @@ The data that the Thematic Workflow Engine is handling is:
 
 - Configuration of the nodes where the execution takes place.
 
-### Thematic Workflow Management
-
-#### General
-
-The Workflow Management component contains the implementation for
-workflow management for the thematic processing subsystem. The purpose
-of the Workflow Management component is to allow processing and
-pre-processing workflows parametrization for chaining multiple operators
-on input satellite products.
-
-#### Function
-
-The main functionalities exposed by this component are:
-
-- retrieve the list of workflows that a given user can see,
-- clone an existing workflow,
-- parameterize a workflow according to the user needs,
-- create a workflow from existing toolboxes,
-- validate a workflow,
-- publish a workflow.
-
-#### Dependencies
-
-The Workflow Management component uses the Persistence Manager component
-for saving and updating the workflow related data into the AVL database.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
-
-#### Data
-
-The data handled by this component are the workflow details (name,
-definition, identifier, visibility flag, etc.), which can be
-saved/retrieved into/from the AVL database using Persistence Manager.
-
-### Data Sources Manager
-
-#### General
-
-The Data Sources Manager component handles the external data source
-modules in the AVL platform. The purpose of the Data Sources Manager
-component is to allow data sources visualization and configuration for
-their usage in workflows creations.
-
-#### Function
-
-The main functionalities exposed by the component are:
-
-- retrieve all existing data sources visible by a given user,
-
-- retrieve the parameters of a data source,
-
-- update the parameters of a data source,
-
-- save a user data product (resulted from a data source interrogation
-  or privately owned).
-
-#### Dependencies
-
-The Data Sources Manager component uses the Persistence Manager
-component for saving and updating the data sources and data products
-related data into the AVL database. It also depends on the data source
-plugins that are installed in the platform.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
-
-#### Data
-
-The data handled by this component are the data sources details (name,
-type, description, connection details and other parameters, etc.), which
-can be saved/retrieved into/from the AVL database using the Persistence
-Manager.
-
-### xcube Converter Manager
-
-#### General
-
-The xcube Converter Manger handles the format conversion from original
-product formats (specific to external data providers or to thematic
-processing subsystem components) to Zarr format (specific to data
-cubes).
-
-#### Function
-
-The module manages individual converters from:
-
-- formats specific to external data providers,
-
-- formats specific to processing subsystem components (such as
-  Sen2Agri, etc.)
-
-#### Dependencies
-
-The xcube Converter Manager depends on Workspace Management for
-retrieving the data products and writing data cubes.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components)
-
-## Software Components Design – Thematic Processing System
-
-The thematic processing sub-system is a collection of self-contained
-(i.e., packed in Docker containers) applications or systems, that
-produce value-added EO products (such as crop masks, crop types,
-agricultural practices, etc.).
-
-The sub-system has at its core the TAO Workflow and Integration engine.
-TAO (stands for Tool Augmentation by user enhancements and
-Orchestration) is an open-source (under GPLv3 license) lightweight,
-generic integration, and distributed orchestration framework. It allows
-the integration of commonly used toolboxes (such as, but not limited to,
-**SNAP, Orfeo Toolbox, GDAL,** etc.) into a single user environment.
-This framework allows for processing composition and distribution in
-such a way that end users could define by themselves processing
-workflows and easily integrate additional processing modules (either
-standalone executables or Python or R scripts).
-
-In terms of use, the TAO platform provides a mean for orchestration of
-heterogeneous processing components and libraries to process remote
-sensing data. This is achieved in following steps:
-
-- Preparation of resources (including processing components) and data
-  input,
-
-- Definition of a workflow as a processing chain,
-
-- Execution of workflows,
-
-- Retrieval / visualisation / sharing of the results.
-
-The following diagram details the AVL Thematic Processing subsystem
-whose components are described hereafter:
-
-![AVL Thematic Subsystem](./../../img/image3.png)
-**AVL Thematic Subsystem**
-
-### Dataset Catalogue Browser
-
-#### General
-
-The purpose of the Dataset Catalogue Browser is to expose to users the
-datasets (local or remote) that are available for usage in AVL.
-
-#### Function
-
-The Dataset Catalogue Browser allows for:
-
-- Listing the available data providers,
-
-- Listing the available data sets for each provider,
-
-- Searching for specific data products in a uniform way (different
-  providers may have different filters for searching data),
-
-- Retrieving the selection of data products to the user workspace.
-
-#### Dependencies
-
-The module relies on the Data Sources Manager component for listing the
-available data providers and searching and/or fetching the data
-products.
-
-#### Interfaces
-
-The module has a web interface with different pages for listing the
-available data providers and for searching and retrieving data products:
-
-![TAO Data Provider List](./../../img/image4.png)
-**TAO Data Provider List**
-
-![TAO Data Products Search](./../../img/image5.jpeg)
-**TAO Data Products Search**
-
-These interfaces will be modified to better suit the AVL needs and to
-accommodate the overall AVL UI look and feel.
-
-### User Workspace Manager
-
-#### General
-
-The purpose of the User Workspace Manager component is twofold: it
-ensures the privacy of users (their data is protected from other users)
-and it allows the quota management (the quantity of infrastructure
-resources – such as storage, CPU, memory – a user can use).
-
-#### Function
-
-The following functions are performed by this component:
-
-- View the details about local data products (accessible for both
-  administrator and user roles, with the difference that the user can
-  only view details about his local data products as well as public
-  data products),
-
-- Upload additional files that can be further used in workflows (such
-  as model files, shape files, etc.),
-
-- Publish (share) data products with other users,
-
-- Monitor user quota.
-
-Note: The AVL Toolbox Hub includes its own workspace management. It is,
-however, dependent on the same User Workspace NFS share. For users of
-the AVL system, this will be transparent.
-
-#### Dependencies
-
-The workspace manager depends on the User Workspace NFS shares common
-component.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
-
-Note: The AVL Toolbox service exposes an API (WebSocket-based JSON RPC)
-to let users manage just *their* private workspace.
-
-### Thematic Workflow Engine
-
-#### General
+### General
 
 The Thematic Workflow Engine is in charge with execution of workflows by
 creating and handling jobs and performing the management of the
@@ -514,7 +386,7 @@ allow the execution of a workflow, by creating a job for each workflow
 execution, splitting and managing the internal components of the
 workflow in execution tasks.
 
-#### Function
+### Function
 
 The main functionalities realized by this component are:
 
@@ -540,7 +412,7 @@ The main functionalities realized by this component are:
 
 The component comprises several constituents:
 
-##### Orchestrator
+#### Orchestrator
 
 This is the component that performs the functionalities above. It uses
 the ExecutionsManager that will undertake the tasks executions,
@@ -551,7 +423,7 @@ steps extraction and decide the next steps to be executed from the
 workflow while the executor is in charge with the effective execution
 and monitoring the execution statuses of the current executing tasks.
 
-##### ExecutionsManager
+#### ExecutionsManager
 
 The ExecutionsManager is in charge with executions of the tasks that the
 Orchestrator needs to perform during a workflow execution. It implements
@@ -631,7 +503,7 @@ following operations:
     a task, the ExecutionsManager will retrieve, if necessary, the full
     log file and will make it available to the user.
 
-##### Executor
+#### Executor
 
 The Executor component is used to execute the tasks command lines via
 the DRMAA interface. It provides the API for:
@@ -654,7 +526,7 @@ framework, AVL will use one of the following two implementations:
 -   A process executor using SSH,
 -   A Kubernetes executor.
 
-#### Dependencies
+### Dependencies
 
 The Orchestrator depends on the following components:
 
@@ -663,13 +535,13 @@ The Orchestrator depends on the following components:
 
 -   The Cluster Manager – for executing the job tasks.
 
-#### Interfaces
+### Interfaces
 
 The module exposes a Java API (for integration with other Java
 components) and a REST API (for usage from heterogeneous clients,
 including web clients).
 
-#### Data
+### Data
 
 The data that the Thematic Workflow Engine is handling is:
 
@@ -685,9 +557,10 @@ The data that the Thematic Workflow Engine is handling is:
 
 -   Configuration of the nodes where the execution takes place.
 
-### Thematic Workflow Management
 
-#### General
+## Thematic Workflow Management
+
+### General
 
 The Workflow Management component contains the implementation for
 workflow management for the thematic processing subsystem. The purpose
@@ -695,7 +568,43 @@ of the Workflow Management component is to allow processing and
 pre-processing workflows parametrization for chaining multiple operators
 on input satellite products.
 
-#### Function
+### Function
+
+The main functionalities exposed by this component are:
+
+- retrieve the list of workflows that a given user can see,
+- clone an existing workflow,
+- parameterize a workflow according to the user needs,
+- create a workflow from existing toolboxes,
+- validate a workflow,
+- publish a workflow.
+
+### Dependencies
+
+The Workflow Management component uses the Persistence Manager component
+for saving and updating the workflow related data into the AVL database.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components) and a REST API (for usage from heterogeneous clients,
+including web clients).
+
+### Data
+
+The data handled by this component are the workflow details (name,
+definition, identifier, visibility flag, etc.), which can be
+saved/retrieved into/from the AVL database using Persistence Manager.
+
+### General
+
+The Workflow Management component contains the implementation for
+workflow management for the thematic processing subsystem. The purpose
+of the Workflow Management component is to allow processing and
+pre-processing workflows parametrization for chaining multiple operators
+on input satellite products.
+
+### Function
 
 The main functionalities exposed by this component are:
 
@@ -706,101 +615,23 @@ The main functionalities exposed by this component are:
 -   validate a workflow,
 -   publish a workflow.
 
-#### Dependencies
+### Dependencies
 
 The Workflow Management component uses the Persistence Manager component
 for saving and updating the workflow related data into the AVL database.
 
-#### Interfaces
+### Interfaces
 
 The module exposes a Java API (for integration with other Java
 components) and a REST API (for usage from heterogeneous clients,
 including web clients).
 
-#### Data
+### Data
 
 The data handled by this component are the workflow details (name,
 definition, identifier, visibility flag, etc.), which can be
 saved/retrieved into/from the AVL database using Persistence Manager.
 
-### Data Sources Manager
-
-#### General
-
-The Data Sources Manager component handles the external data source
-modules in the AVL platform. The purpose of the Data Sources Manager
-component is to allow data sources visualization and configuration for
-their usage in workflows creations.
-
-#### Function
-
-The main functionalities exposed by the component are:
-
--   retrieve all existing data sources visible by a given user,
-
--   retrieve the parameters of a data source,
-
--   update the parameters of a data source,
-
--   save a user data product (resulted from a data source interrogation
-    or privately owned).
-
-#### Dependencies
-
-The Data Sources Manager component uses the Persistence Manager
-component for saving and updating the data sources and data products
-related data into the AVL database. It also depends on the data source
-plugins that are installed in the platform.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
-
-#### Data
-
-The data handled by this component are the data sources details (name,
-type, description, connection details and other parameters, etc.), which
-can be saved/retrieved into/from the AVL database using the Persistence
-Manager.
-
-### xcube Converter Manager
-
-#### General
-
-The xcube Converter Manger handles the format conversion from original
-product formats (specific to external data providers or to thematic
-processing subsystem components) to Zarr format (specific to data
-cubes).
-
-#### Function
-
-The module manages individual converters from:
-
--   formats specific to external data providers,
-
--   formats specific to processing subsystem components (such as
-    Sen2Agri, etc.)
-
-#### Dependencies
-
-The xcube Converter Manager depends on Workspace Management for
-retrieving the data products and writing data cubes.
-
-#### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components)
-
-## Dataset Explorer
-
-The Dataset Explorer allows for:
-
- - Listing the available data providers,
- - Listing the available data sets for each provider,
- - Searching for specific data products in a uniform way (different providers may have different filters for searching data),
- - Retrieving the selection of data products to the user workspace.
 
 ## Data Sources Manager
 
@@ -813,14 +644,190 @@ The main functionalities exposed by the component are:
  - query the remote data source,
  - retrieve data products
 
-## Workspace Manager
+### General
 
-The following functions are performed by this component:
+The Data Sources Manager component handles the external data source
+modules in the AVL platform. The purpose of the Data Sources Manager
+component is to allow data sources visualization and configuration for
+their usage in workflows creations.
 
- - View the details about local data products (accessible for both administrator and user roles, with the difference that the user can only view details about his local data products as well as public data products),
- - Upload additional files that can be further used in workflows (such as model files, shape files, etc.),
- - Publish (share) data products with other users,
- - Monitor user quota.
+### Function
+
+The main functionalities exposed by the component are:
+
+- retrieve all existing data sources visible by a given user,
+
+- retrieve the parameters of a data source,
+
+- update the parameters of a data source,
+
+- save a user data product (resulted from a data source interrogation
+  or privately owned).
+
+### Dependencies
+
+The Data Sources Manager component uses the Persistence Manager
+component for saving and updating the data sources and data products
+related data into the AVL database. It also depends on the data source
+plugins that are installed in the platform.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components) and a REST API (for usage from heterogeneous clients,
+including web clients).
+
+### Data
+
+The data handled by this component are the data sources details (name,
+type, description, connection details and other parameters, etc.), which
+can be saved/retrieved into/from the AVL database using the Persistence
+Manager.
+
+### General
+
+The Data Sources Manager component handles the external data source
+modules in the AVL platform. The purpose of the Data Sources Manager
+component is to allow data sources visualization and configuration for
+their usage in workflows creations.
+
+### Function
+
+The main functionalities exposed by the component are:
+
+-   retrieve all existing data sources visible by a given user,
+
+-   retrieve the parameters of a data source,
+
+-   update the parameters of a data source,
+
+-   save a user data product (resulted from a data source interrogation
+    or privately owned).
+
+### Dependencies
+
+The Data Sources Manager component uses the Persistence Manager
+component for saving and updating the data sources and data products
+related data into the AVL database. It also depends on the data source
+plugins that are installed in the platform.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components) and a REST API (for usage from heterogeneous clients,
+including web clients).
+
+### Data
+
+The data handled by this component are the data sources details (name,
+type, description, connection details and other parameters, etc.), which
+can be saved/retrieved into/from the AVL database using the Persistence
+Manager.
+
+## xcube Converter Manager
+
+The xcube Converter handles the format conversion from original raster product formats (specific to external data providers or to thematic processing subsystem components) to Zarr format (specific to data cubes).
+
+### General
+
+The xcube Converter Manger handles the format conversion from original
+product formats (specific to external data providers or to thematic
+processing subsystem components) to Zarr format (specific to data
+cubes).
+
+### Function
+
+The module manages individual converters from:
+
+- formats specific to external data providers,
+
+- formats specific to processing subsystem components (such as
+  Sen2Agri, etc.)
+
+### Dependencies
+
+The xcube Converter Manager depends on Workspace Management for
+retrieving the data products and writing data cubes.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components)
+
+### General
+
+The xcube Converter Manger handles the format conversion from original
+product formats (specific to external data providers or to thematic
+processing subsystem components) to Zarr format (specific to data
+cubes).
+
+### Function
+
+The module manages individual converters from:
+
+-   formats specific to external data providers,
+
+-   formats specific to processing subsystem components (such as
+    Sen2Agri, etc.)
+
+### Dependencies
+
+The xcube Converter Manager depends on Workspace Management for
+retrieving the data products and writing data cubes.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components)
+
+## Dataset Catalogue Browser
+
+### General
+
+The purpose of the Dataset Catalogue Browser is to expose to users the
+datasets (local or remote) that are available for usage in AVL.
+
+### Function
+
+The Dataset Catalogue Browser allows for:
+
+- Listing the available data providers,
+
+- Listing the available data sets for each provider,
+
+- Searching for specific data products in a uniform way (different
+  providers may have different filters for searching data),
+
+- Retrieving the selection of data products to the user workspace.
+
+### Dependencies
+
+The module relies on the Data Sources Manager component for listing the
+available data providers and searching and/or fetching the data
+products.
+
+### Interfaces
+
+The module has a web interface with different pages for listing the
+available data providers and for searching and retrieving data products:
+
+![TAO Data Provider List](./../../img/image4.png)
+**TAO Data Provider List**
+
+![TAO Data Products Search](./../../img/image5.jpeg)
+**TAO Data Products Search**
+
+These interfaces will be modified to better suit the AVL needs and to
+accommodate the overall AVL UI look and feel.
+
+## Dataset Explorer
+
+The Dataset Explorer allows for:
+
+ - Listing the available data providers,
+ - Listing the available data sets for each provider,
+ - Searching for specific data products in a uniform way (different providers may have different filters for searching data),
+ - Retrieving the selection of data products to the user workspace.
 
 ## Workflow Editor
 
@@ -832,11 +839,3 @@ Main functionalities are:
  - parameterize a workflow according to the user needs,
  - create a workflow from existing toolboxes,
  - validate a workflow
-
-## Workflow Engine
-
-The Thematic Workflow Engine is in charge with execution of workflows by creating and handling jobs and performing the management of the execution steps from a workflow. The purpose of the Orchestration is to allow the execution of a workflow, by creating a job for each workflow execution, splitting and managing the internal components of the workflow in execution tasks.
-
-## xcube Converter
-
-The xcube Converter handles the format conversion from original raster product formats (specific to external data providers or to thematic processing subsystem components) to Zarr format (specific to data cubes).
