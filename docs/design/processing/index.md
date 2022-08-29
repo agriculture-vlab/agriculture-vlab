@@ -278,23 +278,9 @@ The data that the Thematic Workflow Engine is handling is:
 -   Parameters of the execution (including information about the products and
     the actual product files that are used in the execution),
 
--   Description of the processing component that defines the inputs, the outputs
-    and their types, the type of the processing component (either a script or a
-    WPS server),
-
--   The progress, log and error messages,
-
--   Configuration of the nodes where the execution takes place.
-
-The data that the Thematic Workflow Engine is handling is:
-
--   Parameters of the execution (including information about the
-    products and the actual product files that are used in the
-    execution),
-
 -   Description of the processing component that defines the inputs, the
-    outputs and their types, the type of the processing component
-    (either a script or a WPS server),
+    outputs and their types, the type of the processing component (either a
+    script or a WPS server),
 
 -   The progress, log and error messages,
 
