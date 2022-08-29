@@ -62,23 +62,22 @@ The dashboard monitoring related functions are:
 
 ### Dependencies
 
-The module depends on the Thematic Workflow Engine and Data Cube
-Processing Engine for activity monitoring.
+The module depends on the Thematic Workflow Engine and Data Cube Processing
+Engine for activity monitoring.
 
 ### Interfaces
 
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
+The module exposes a Java API (for integration with other Java components) and
+a REST API (for usage from heterogeneous clients, including web clients).
 
 ## User Workspace Manager
 
 ### General
 
-The purpose of the User Workspace Manager component is twofold: it
-ensures the privacy of users (their data is protected from other users)
-and it allows the quota management (the quantity of infrastructure
-resources – such as storage, CPU, memory – a user can use).
+The purpose of the User Workspace Manager component is twofold: it ensures the
+privacy of users (their data is protected from other users) and it allows
+quota management (the quantity of infrastructure resources – such as storage,
+CPU, memory – a user can use).
 
 ### Function
 
@@ -116,7 +115,7 @@ to let users manage just *their* private workspace.
 
 ### General
 
-The Thematic Workflow Engine is in charge with execution of workflows by
+The Thematic Workflow Engine is in charge of execution of workflows by
 creating and handling jobs and performing the management of the execution
 steps from a workflow. The purpose of the Orchestration is to allow the
 execution of a workflow, by creating a job for each workflow execution,
@@ -235,7 +234,7 @@ operations:
 
 #### Executor
 
-The Executor component is used to execute the tasks command lines via the
+The Executor component is used to execute the tasks' command lines via the
 DRMAA interface. It provides the API for:
 
 -   Start the execution of the processing components using the specified
@@ -273,7 +272,7 @@ a REST API (for usage from heterogeneous clients, including web clients).
 
 ### Data
 
-The data that the Thematic Workflow Engine is handling is:
+The data that the Thematic Workflow Engine is handling are:
 
 -   Parameters of the execution (including information about the products and
     the actual product files that are used in the execution),
@@ -290,11 +289,10 @@ The data that the Thematic Workflow Engine is handling is:
 
 ### General
 
-The Workflow Management component contains the implementation for
-workflow management for the thematic processing subsystem. The purpose
-of the Workflow Management component is to allow processing and
-pre-processing workflows parametrization for chaining multiple operators
-on input satellite products.
+The Workflow Management component contains the implementation for workflow
+management for the thematic processing subsystem. The purpose of the Workflow
+Management component is to allow processing and pre-processing workflows
+parametrization for chaining multiple operators on input satellite products.
 
 ### Function
 
@@ -319,15 +317,14 @@ for saving and updating the workflow related data into the AVL database.
 
 ### Interfaces
 
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
+The module exposes a Java API (for integration with other Java components) and
+a REST API (for usage from heterogeneous clients, including web clients).
 
 ### Data
 
-The data handled by this component are the workflow details (name,
-definition, identifier, visibility flag, etc.), which can be
-saved/retrieved into/from the AVL database using Persistence Manager.
+The data handled by this component are the workflow details (name, definition,
+identifier, visibility flag, etc.), which can be saved/retrieved into/from the
+AVL database using Persistence Manager.
 
 ## Data Sources Manager
 
@@ -359,10 +356,10 @@ The main functionalities exposed by the component are:
 
 ### Dependencies
 
-The Data Sources Manager component uses the Persistence Manager
-component for saving and updating the data sources and data products
-related data into the AVL database. It also depends on the data source
-plugins that are installed in the platform.
+The Data Sources Manager component uses the Persistence Manager component for
+saving and updating the data sources and data products related data into the
+AVL database. It also depends on the data source plugins that are installed in
+the platform.
 
 ### Interfaces
 
