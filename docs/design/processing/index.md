@@ -96,8 +96,8 @@ The following functions are performed by this component:
 - Monitor user quota.
 
 Note: The AVL Toolbox Hub includes its own workspace management. It is,
-however, dependent on the same User Workspace NFS share. For users of
-the AVL system, this will be transparent.
+however, dependent on the same User Workspace NFS share. For users of the AVL
+system, this will be transparent.
 
 ### Dependencies
 
@@ -238,28 +238,6 @@ operations:
 The Executor component is used to execute the tasks command lines via the
 DRMAA interface. It provides the API for:
 
--   Start the execution of the processing components using the specified command
-    line,
-
--   Stop/suspend or resume the execution of the processing components,
-
--   Provide information about the progress of the execution and logs,
-
--   Specific functions from DRMAA specifications,
-
--   Custom functions demanded by the AVL platform (listeners, initialization
-    functions etc.).
-
-Although there are several implementations already available in the TAO
-framework, AVL will use one of the following two implementations:
-
--   A process executor using SSH,
-
--   A Kubernetes executor.
-
-The Executor component is used to execute the tasks command lines via
-the DRMAA interface. It provides the API for:
-
 -   Start the execution of the processing components using the specified
     command line,
 
@@ -269,8 +247,8 @@ the DRMAA interface. It provides the API for:
 
 -   Specific functions from DRMAA specifications,
 
--   Custom functions demanded by the AVL platform (listeners,
-    initialization functions etc.).
+-   Custom functions demanded by the AVL platform (listeners, initialization
+    functions etc.).
 
 Although there are several implementations already available in the TAO
 framework, AVL will use one of the following two implementations:
@@ -310,27 +288,21 @@ The data that the Thematic Workflow Engine is handling is:
 
 The data that the Thematic Workflow Engine is handling is:
 
--     Parameters of the execution (including information about the
-      products and the actual product files that are used in the
-      execution),
+-   Parameters of the execution (including information about the
+    products and the actual product files that are used in the
+    execution),
 
--     Description of the processing component that defines the inputs, the
-      outputs and their types, the type of the processing component
-      (either a script or a WPS server),
+-   Description of the processing component that defines the inputs, the
+    outputs and their types, the type of the processing component
+    (either a script or a WPS server),
 
--     The progress, log and error messages,
+-   The progress, log and error messages,
 
--     Configuration of the nodes where the execution takes place.
+-   Configuration of the nodes where the execution takes place.
 
 ## Thematic Workflow Management
 
 ### General
-
-The Workflow Management component contains the implementation for
-workflow management for the thematic processing subsystem. The purpose
-of the Workflow Management component is to allow processing and
-pre-processing workflows parametrization for chaining multiple operators
-on input satellite products.
 
 The Workflow Management component contains the implementation for
 workflow management for the thematic processing subsystem. The purpose
@@ -343,19 +315,15 @@ on input satellite products.
 The main functionalities exposed by this component are:
 
 -   retrieve the list of workflows that a given user can see,
--   clone an existing workflow,
--   parameterize a workflow according to the user needs,
--   create a workflow from existing toolboxes,
--   validate a workflow,
--   publish a workflow.
 
-The main functionalities exposed by this component are:
-
--   retrieve the list of workflows that a given user can see,
 -   clone an existing workflow,
+
 -   parameterize a workflow according to the user needs,
+
 -   create a workflow from existing toolboxes,
+
 -   validate a workflow,
+
 -   publish a workflow.
 
 ### Dependencies
@@ -384,33 +352,7 @@ the AVL platform. The purpose of the Data Sources Manager component is to
 allow data sources visualization and configuration for their usage in
 workflows creations.
 
-The Data Sources Manager component handles the external data source modules in
-the AVL platform. The purpose of the Data Sources Manager component is to
-allow data sources visualization and configuration for their usage in
-workflows creations.
-
 ### Function
-
-The main functionalities exposed by the component are:
-
-- retrieve all existing data sources visible by a given user,
-
-- retrieve the parameters of a data source,
-
-- update the parameters of a data source,
-
-- save a user data product (resulted from a data source interrogation
-  or privately owned).
-
-The main functionalities exposed by the component are:
-
--   find all existing data sources visible by a given user,
-
--   retrieve the parameters of a data source,
-
--   query the remote data source,
-
--   retrieve data products
 
 The main functionalities exposed by the component are:
 
@@ -420,7 +362,13 @@ The main functionalities exposed by the component are:
 
 -   update the parameters of a data source,
 
--   save a user data product (resulted from a data source interrogation
+-   query the remote data source,
+
+-   retrieve data products
+
+-   retrieve the parameters of a data source,
+
+-   save a user data product (resulting from a data source interrogation
     or privately owned).
 
 ### Dependencies
@@ -430,15 +378,7 @@ component for saving and updating the data sources and data products
 related data into the AVL database. It also depends on the data source
 plugins that are installed in the platform.
 
-The Data Sources Manager component uses the Persistence Manager
-component for saving and updating the data sources and data products
-related data into the AVL database. It also depends on the data source
-plugins that are installed in the platform.
-
 ### Interfaces
-
-The module exposes a Java API (for integration with other Java components) and
-a REST API (for usage from heterogeneous clients, including web clients).
 
 The module exposes a Java API (for integration with other Java components) and
 a REST API (for usage from heterogeneous clients, including web clients).
@@ -450,35 +390,15 @@ type, description, connection details and other parameters, etc.), which
 can be saved/retrieved into/from the AVL database using the Persistence
 Manager.
 
-The data handled by this component are the data sources details (name,
-type, description, connection details and other parameters, etc.), which
-can be saved/retrieved into/from the AVL database using the Persistence
-Manager.
-
 ## xcube Converter Manager
 
 ### General
 
-The xcube Converter handles the format conversion from original raster product
-formats (specific to external data providers or to thematic processing
-subsystem components) to Zarr format (specific to data cubes).
-
-The xcube Converter Manger handles the format conversion from original product
-formats (specific to external data providers or to thematic processing
-subsystem components) to Zarr format (specific to data cubes).
-
-The xcube Converter Manger handles the format conversion from original product
-formats (specific to external data providers or to thematic processing
+The xcube Converter Manager handles the format conversion from original raster
+product formats (specific to external data providers or to thematic processing
 subsystem components) to Zarr format (specific to data cubes).
 
 ### Function
-
-The module manages individual converters from:
-
--   formats specific to external data providers,
-
--   formats specific to processing subsystem components (such as
-    Sen2Agri, etc.)
 
 The module manages individual converters from:
 
@@ -492,13 +412,7 @@ The module manages individual converters from:
 The xcube Converter Manager depends on Workspace Management for
 retrieving the data products and writing data cubes.
 
-The xcube Converter Manager depends on Workspace Management for
-retrieving the data products and writing data cubes.
-
 ### Interfaces
-
-The module exposes a Java API (for integration with other Java
-components)
 
 The module exposes a Java API (for integration with other Java
 components)
@@ -547,18 +461,26 @@ accommodate the overall AVL UI look and feel.
 
 The Dataset Explorer allows for:
 
- - Listing the available data providers,
- - Listing the available data sets for each provider,
- - Searching for specific data products in a uniform way (different providers may have different filters for searching data),
- - Retrieving the selection of data products to the user workspace.
+-   Listing the available data providers,
+
+-   Listing the available data sets for each provider,
+
+-   Searching for specific data products in a uniform way (different providers
+    may have different filters for searching data),
+
+-   Retrieving the selection of data products to the user workspace.
 
 ## Workflow Editor
 
-The Workflow Editor allows for building custom processing chains using modules from the supported toolboxes.
-Main functionalities are:
+The Workflow Editor allows for building custom processing chains using modules
+from the supported toolboxes. Main functionalities are:
 
- - retrieve the list of workflows that a given user can see,
- - clone an existing workflow,
- - parameterize a workflow according to the user needs,
- - create a workflow from existing toolboxes,
- - validate a workflow
+-   retrieve the list of workflows that a given user can see,
+
+-   clone an existing workflow,
+
+-   parameterize a workflow according to the user needs,
+
+-   create a workflow from existing toolboxes,
+
+-   validate a workflow
