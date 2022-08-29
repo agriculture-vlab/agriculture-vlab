@@ -8,48 +8,17 @@ The sub-system has at its core the TAO Workflow and Integration engine. TAO
 (stands for Tool Augmentation by user enhancements and Orchestration) is an
 open-source (under GPLv3 license) lightweight, generic integration, and
 distributed orchestration framework. It allows the integration of commonly
-used toolboxes (such as, but not limited to, SNAP, Orfeo Toolbox, GDAL, etc.)
-into a single user environment. This framework allows for processing
+used toolboxes (such as, but not limited to, **SNAP, Orfeo Toolbox, GDAL,**
+etc.) into a single user environment. This framework allows for processing
 composition and distribution in such a way that end users could define by
 themselves processing workflows and easily integrate additional processing
 modules (either standalone executables or Python or R scripts).
 
-In terms of use, the TAO platform provides a mean for orchestration of
+In terms of use, the TAO platform provides a means for orchestration of
 heterogeneous processing components and libraries to process remote sensing
 data. This is achieved in following steps:
 
- - Preparation of resources (including processing components) and data input,
- - Definition of a workflow as a processing chain,
- - Execution of workflows,
- - Retrieval / visualisation / sharing of the results.
-
-The following diagram details the AVL Thematic Processing subsystem:
-![Structure of AVL thematic processing subsystem](../../img/avl-ts.png)
-
-## Introduction
-
-The thematic processing sub-system is a collection of self-contained
-(i.e., packed in Docker containers) applications or systems, that
-produce value-added EO products (such as crop masks, crop types,
-agricultural practices, etc.).
-
-The sub-system has at its core the TAO Workflow and Integration engine.
-TAO (stands for Tool Augmentation by user enhancements and
-Orchestration) is an open-source (under GPLv3 license) lightweight,
-generic integration, and distributed orchestration framework. It allows
-the integration of commonly used toolboxes (such as, but not limited to,
-**SNAP, Orfeo Toolbox, GDAL,** etc.) into a single user environment.
-This framework allows for processing composition and distribution in
-such a way that end users could define by themselves processing
-workflows and easily integrate additional processing modules (either
-standalone executables or Python or R scripts).
-
-In terms of use, the TAO platform provides a means for orchestration of
-heterogeneous processing components and libraries to process remote
-sensing data. This is achieved in following steps:
-
-- Preparation of resources (including processing components) and data
-  input,
+- Preparation of resources (including processing components) and data input,
 
 - Definition of a workflow as a processing chain,
 
@@ -60,8 +29,8 @@ sensing data. This is achieved in following steps:
 The following diagram details the AVL Thematic Processing subsystem
 whose components are described hereafter:
 
-![AVL Thematic Subsystem](./../../img/image3.png)
-**AVL Thematic Subsystem**
+![Structure of AVL thematic processing subsystem](../../img/avl-ts.png)
+**AVL thematic subsystem**
 
 ## System Monitoring Dashboard
 
