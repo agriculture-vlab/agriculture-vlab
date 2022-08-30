@@ -21,14 +21,14 @@ nav:
     - Passive microwave datasets: datasets/passive_microwave.md
     - Radar datasets: datasets/radar.md
   - Design:
-    - Introduction: design/index.md
-    - Overview and common components: design/common.md
-    - Exploitation system design: design/exploitation/index.md
+    - Overview: design/index.md
+    - Architecture and common components: design/common.md
     - Processing system design: design/processing/index.md
+    - Exploitation system design: design/exploitation/index.md
     - Development: design/development.md
     - Software reuse: design/reuse.md
-    - "Testing: Exploitation system": design/testing/exploitation.md
     - "Testing: Processing system": design/testing/processing.md
+    - "Testing: Exploitation system": design/testing/exploitation.md
   - About:
     - Project: about/index.md
     - License: about/license.md
