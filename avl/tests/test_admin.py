@@ -68,14 +68,14 @@ class TestAdmin:
         policies_response = iam_client.list_policies(Scope='Local')
         policies = [p['PolicyName'] for p in policies_response['Policies']]
         assert [f'{resource_prefix}-{_admin.PERMISSIONS_BOUNDARY}'] == policies
-
         policy_response = iam_client.get_user_policy(
             UserName=f'{resource_prefix}-user-manager',
             PolicyName='aws-user-manager-policy'
         )
         assert len(policy_response['PolicyDocument']) > 0
 
-        cloudwatch_client = boto3.client('cloudwatch')
+        cloudwatch_client = boto3.client('cloudwatch',
+                                         region_name='eu-central-1')
         cloudwatch_response = cloudwatch_client.describe_alarms()
         metric_alarms = cloudwatch_response['MetricAlarms']
         assert 3 == len(metric_alarms)
@@ -84,7 +84,7 @@ class TestAdmin:
             assert 'Average' == metric_alarm['Statistic']
             assert bucket_size_limit == metric_alarm['Threshold']
 
-        sns_client = boto3.client('sns')
+        sns_client = boto3.client('sns', region_name='eu-central-1')
         topics = sns_client.list_topics()['Topics']
         assert 1 == len(topics)
         topic_arn = topics[0]['TopicArn']
@@ -94,7 +94,6 @@ class TestAdmin:
         assert topic_arn == subscription['TopicArn']
         assert 'email' == subscription['Protocol']
         assert alert_email == subscription['Endpoint']
-
 
     def test_bucket_access_user_creator(self):
         resource_prefix = 'avltest'
