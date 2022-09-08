@@ -93,14 +93,28 @@ class AwsResourceCreator:
         self.user_manager_key_secret = None
 
     def create_resources(self):
-        """Create and configure all the resources required by AVL"""
+        """Create and configure the AWS resources required by AVL.
+
+        NB: these resources do not include the cluster used for AVL
+        deployment, which can be created by following the instruction in
+        the operator manual.
+
+        This is a convenience method which calls the following methods:
+        *create_buckets*, *configure_buckets*, *create_users_and_policies*,
+        and *configure_bucket_usage_alerts*. See the documentation of those
+        methods for further details.
+        """
         self.create_buckets()
         self.configure_buckets()
         self.create_users_and_policies()
         self.configure_bucket_usage_alerts()
 
     def create_buckets(self):
-        """Create (but do not configure) the S3 buckets required by AVL"""
+        """Create the S3 buckets required by AVL.
+
+        This method only creates the buckets; it does not configure any IAM
+        or lifecycle policies for them.
+        """
 
         bucket_ids = ['user', 'public', 'data', 'data-test', 'data-staging',
                       'scratch']
@@ -379,20 +393,26 @@ class AwsResourceCreator:
             self.create_alarm(client, self.resource_prefix + bucket, actions)
 
     def create_alarm(self, client, bucket_name: str, actions: List[str]):
+        # See https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-dimensions.html
         client.put_metric_alarm(
             AlarmName=bucket_name + '-size',
             AlarmDescription='An AVL bucket size exceeds the limit',
             ActionsEnabled=True,
-            OKActions=[],
+            OKActions=actions,
             AlarmActions=actions,
             InsufficientDataActions=actions,
             MetricName='BucketSizeBytes',
             Namespace='AWS/S3',
-            Statistic='Maximum',
+            # According to AWS docs, Average is the only valid statistic for
+            # BucketSizeBytes. But it doesn't matter here anyway, since in this
+            # case it's an average of a single data point.
+            Statistic='Average',
             Dimensions=[
                 {'Name': 'StorageType', 'Value': 'StandardStorage'},
                 {'Name': 'BucketName', 'Value': bucket_name},
             ],
+            # BucketSizeBytes is only reported daily, so no point in trying to
+            # get higher time resolution here.
             Period=60 * 60 * 24,
             Unit='Seconds',
             EvaluationPeriods=1,
