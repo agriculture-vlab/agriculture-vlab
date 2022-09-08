@@ -47,26 +47,37 @@ class AwsResourceCreator:
     """
 
     def __init__(self, aws_account_number: str, creator_tag: str,
-                 resource_prefix: str, data_providers: List[str] = None):
+                 resource_prefix: str, data_providers: List[str] = None,
+                 alert_email: str = None, bucket_size_limit_bytes: int = 1e12):
         """Instantiate a new AWS resource creator.
 
-        No AWS resources are created until the create_resources method
-        is called.
+        No AWS resources are created until the *create_resources* method
+        is called. See the *create_resources* documentation for details of
+        which resources are created.
 
         :param aws_account_number: number of AWS account under which resources
                are to be created
         :param creator_tag: value for the "creator" tag in created resources
         :param resource_prefix: prefix to apply to name of created resources
-        :param list of ARN strings of accounts which should have write access
-               to the data, data-staging, and data-test buckets
+        :param data_providers: list of ARN strings of accounts which should have
+               write access to the data, data-staging, and data-test buckets
+        :param alert_email: email address which should be subscribed to alerts
+               about excess bucket usage. If *alert_email* is omitted,
+               CloudWatch alerts and an SNS topic will still be created, but
+               no emails will be sent.
+        :param bucket_size_limit_bytes: maximum bucket size for
+               user-writeable buckets. If the contents of a user-writeable
+               bucket exceed this size, an email alert will be sent.
         """
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
         # boto3 can find them.
         self.resource_prefix = resource_prefix
         self.data_providers = data_providers
+        self.alert_email = alert_email
+        self.bucket_size_limit_bytes = bucket_size_limit_bytes
         self.region = 'eu-central-1'
-        self.session = boto3.session.Session(region_name='eu-central-1')
+        self.session = boto3.session.Session(region_name=self.region)
         self.iam_client = self.session.client(service_name='iam')
         self.s3_client = self.session.client(service_name='s3')
         self.tags = [
@@ -86,6 +97,7 @@ class AwsResourceCreator:
         self.create_buckets()
         self.configure_buckets()
         self.create_users_and_policies()
+        self.configure_bucket_usage_alerts()
 
     def create_buckets(self):
         """Create (but do not configure) the S3 buckets required by AVL"""
@@ -99,7 +111,7 @@ class AwsResourceCreator:
             self.s3_client.create_bucket(
                 Bucket=bucket_name,
                 CreateBucketConfiguration={
-                    'LocationConstraint': 'eu-central-1'
+                    'LocationConstraint': self.region
                 },
                 ObjectOwnership='BucketOwnerEnforced',
             )
@@ -328,6 +340,68 @@ class AwsResourceCreator:
         self.user_manager_key_id = access_key['AccessKey']['AccessKeyId']
         self.user_manager_key_secret = access_key['AccessKey'][
             'SecretAccessKey']
+
+    def configure_bucket_usage_alerts(self):
+        """Create alarms for excess usage of AVL buckets
+
+        This method creates an Amazon SNS topic for an excess bucket usage
+        alert and adds a subscription for the email address specified in
+        the constructor. It then sets up Cloudwatch alarm which is activated
+        when the size of any of the user-writeable AVL buckets exceeds the
+        limit, or when the bucket size cannot be determined. The alarm
+        is linked to the SNS topic and reported to the subscribed email address.
+        """
+
+        topic_arn = self._create_and_subscribe_sns_topic()
+        self._create_alarms([topic_arn])
+
+    def _create_and_subscribe_sns_topic(self):
+        sns_client = self.session.client(service_name='sns')
+        response = sns_client.create_topic(
+            Name=self.resource_prefix + '-excess-bucket-usage',
+            Attributes={},
+            Tags=self.tags
+        )
+        topic_arn = response['TopicArn']
+        if self.alert_email is not None:
+            sns_client.subscribe(
+                TopicArn=topic_arn,
+                Protocol='email',
+                Endpoint=self.alert_email,
+                Attributes={},
+            )
+            # A subscription ARN is returned, but we don't need it for anything.
+        return topic_arn
+
+    def _create_alarms(self, actions: List[str]):
+        client = self.session.client(service_name='cloudwatch')
+        for bucket in '-scratch', '-user', '-public':
+            self.create_alarm(client, self.resource_prefix + bucket, actions)
+
+    def create_alarm(self, client, bucket_name: str, actions: List[str]):
+        client.put_metric_alarm(
+            AlarmName=bucket_name + '-size',
+            AlarmDescription='An AVL bucket size exceeds the limit',
+            ActionsEnabled=True,
+            OKActions=[],
+            AlarmActions=actions,
+            InsufficientDataActions=actions,
+            MetricName='BucketSizeBytes',
+            Namespace='AWS/S3',
+            Statistic='Maximum',
+            Dimensions=[
+                {'Name': 'StorageType', 'Value': 'StandardStorage'},
+                {'Name': 'BucketName', 'Value': bucket_name},
+            ],
+            Period=60 * 60 * 24,
+            Unit='Seconds',
+            EvaluationPeriods=1,
+            DatapointsToAlarm=1,
+            Threshold=self.bucket_size_limit_bytes,
+            ComparisonOperator='GreaterThanThreshold',
+            TreatMissingData='breaching',
+            Tags=self.tags,
+        )
 
 
 class BucketAccessUserCreator:
