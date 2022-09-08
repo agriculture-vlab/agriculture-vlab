@@ -6,7 +6,7 @@ from typing import List
 
 import boto3
 import pytest
-from moto import mock_s3, mock_iam
+from moto import mock_s3, mock_iam, mock_cloudwatch, mock_sns
 
 from avl import _admin
 from avl._admin import BucketAccessUserCreator
@@ -14,6 +14,8 @@ from avl._admin import BucketAccessUserCreator
 
 @mock_s3
 @mock_iam
+@mock_cloudwatch
+@mock_sns
 class TestAdmin:
 
     @pytest.fixture(autouse=True)
@@ -30,9 +32,15 @@ class TestAdmin:
     def test_create_resources(self):
         creator_tag = 'creator_name'
         resource_prefix = 'avltest'
-        creator = _admin.AwsResourceCreator(aws_account_number='000000000000',
-                                            creator_tag=creator_tag,
-                                            resource_prefix=resource_prefix)
+        alert_email = 'test@example.com'
+        bucket_size_limit = 12345
+        creator = _admin.AwsResourceCreator(
+            aws_account_number='000000000000',
+            creator_tag=creator_tag,
+            resource_prefix=resource_prefix,
+            alert_email=alert_email,
+            bucket_size_limit_bytes=bucket_size_limit
+        )
         creator.create_resources()
 
         s3_client = boto3.client('s3')
@@ -67,6 +75,27 @@ class TestAdmin:
         )
         assert len(policy_response['PolicyDocument']) > 0
 
+        cloudwatch_client = boto3.client('cloudwatch')
+        cloudwatch_response = cloudwatch_client.describe_alarms()
+        metric_alarms = cloudwatch_response['MetricAlarms']
+        assert 3 == len(metric_alarms)
+        for metric_alarm in metric_alarms:
+            assert 'BucketSizeBytes' == metric_alarm['MetricName']
+            assert 'Average' == metric_alarm['Statistic']
+            assert bucket_size_limit == metric_alarm['Threshold']
+
+        sns_client = boto3.client('sns')
+        topics = sns_client.list_topics()['Topics']
+        assert 1 == len(topics)
+        topic_arn = topics[0]['TopicArn']
+        subscriptions = sns_client.list_subscriptions()["Subscriptions"]
+        assert 1 == len(subscriptions)
+        subscription = subscriptions[0]
+        assert topic_arn == subscription['TopicArn']
+        assert 'email' == subscription['Protocol']
+        assert alert_email == subscription['Endpoint']
+
+
     def test_bucket_access_user_creator(self):
         resource_prefix = 'avltest'
         creator_tag = 'creator_name'
@@ -86,7 +115,8 @@ class TestAdmin:
         assert isinstance(access_secret, str)
 
         user_response = iam_client.get_user(
-            UserName=f'{resource_prefix}-{_admin.BUCKET_ACCESS_USER_PREFIX}-{user_name}')
+            UserName=f'{resource_prefix}-{_admin.BUCKET_ACCESS_USER_PREFIX}-'
+                     f'{user_name}')
 
         # We have to skip the check for the correctly applied permissions
         # boundary, since moto (as of version 3.0.5) only supports permissions
