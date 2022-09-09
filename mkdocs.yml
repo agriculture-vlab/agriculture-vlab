@@ -12,7 +12,7 @@ nav:
     - "Exploitation System: Viewer": guide/exploitation/viewer.md
     - Processing System Guide: guide/processing/index.md
     - CLI Tools: guide/tools.md
-    - Python API Reference: guide/python-api.md
+  - Python API Reference: mkapi/api/avl
   - Datasets:
     - Conventions: datasets/conventions.md
     - Altimetric datasets: datasets/altimetric.md

@@ -19,6 +19,8 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+"""Functions for data verification"""
+
 import collections.abc
 from typing import Any, List, Union, Dict, Tuple, Callable
 
@@ -97,6 +99,7 @@ def verify_dataset(
 
 
 def make_report(dataset_list_path: str):
+    """Make report"""
     with open(dataset_list_path, 'r') as fh:
         ds_paths = list(map(lambda s: s.strip(), fh.readlines()))
 
