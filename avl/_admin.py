@@ -63,19 +63,20 @@ class AwsResourceCreator:
         is called. See the *create_resources* documentation for details of
         which resources are created.
 
-        :param aws_account_number: number of AWS account under which resources
-               are to be created
-        :param creator_tag: value for the "creator" tag in created resources
-        :param resource_prefix: prefix to apply to name of created resources
-        :param data_providers: list of ARN strings of accounts which should have
-               write access to the data, data-staging, and data-test buckets
-        :param alert_email: email address which should be subscribed to alerts
-               about excess bucket usage. If *alert_email* is omitted,
-               CloudWatch alerts and an SNS topic will still be created, but
-               no emails will be sent.
-        :param bucket_size_limit_bytes: maximum bucket size for
-               user-writeable buckets. If the contents of a user-writeable
-               bucket exceed this size, an email alert will be sent.
+        Args:
+            aws_account_number: number of AWS account under which resources
+                   are to be created
+            creator_tag: value for the "creator" tag in created resources
+            resource_prefix: prefix to apply to name of created resources
+            data_providers: list of ARN strings of accounts which should have
+                   write access to the data, data-staging, and data-test buckets
+            alert_email: email address which should be subscribed to alerts
+                   about excess bucket usage. If *alert_email* is omitted,
+                   CloudWatch alerts and an SNS topic will still be created, but
+                   no emails will be sent.
+            bucket_size_limit_bytes: maximum bucket size for
+                   user-writeable buckets. If the contents of a user-writeable
+                   bucket exceed this size, an email alert will be sent.
         """
         # We assume that a suitable access key and secret are specified
         # in .aws/credentials or the equivalent environment variables where
@@ -460,20 +461,21 @@ class BucketAccessUserCreator:
         No user or access key is created until the ensure_user_and_create_key
         method is called.
 
-        :param user_name: the AVL user name, which will be used as one
-               component of the IAM user name
-        :param client_id: the client ID of the IAM user that will be used to
-               create the bucket access user. It is expected that this will be
-               the "user manager" user created during AVL initialization, but
-               any user with sufficient permissions will work.
-        :param client_secret: the client secret associated with the client_id
-               parameter
-        :param aws_account_number: the number of the AWS account hosting the
-               AVL
-        :param creator_tag: the value to be used for the "creator" tag applied
-               to the bucket access user
-        :param resource_prefix: prefix to use when constructing the IAM user
-               name from the AVL user name
+        Args:
+            user_name: the AVL user name, which will be used as one
+                   component of the IAM user name
+            client_id: the client ID of the IAM user that will be used to
+                   create the bucket access user. It is expected that this will be
+                   the "user manager" user created during AVL initialization, but
+                   any user with sufficient permissions will work.
+            client_secret: the client secret associated with the client_id
+                   parameter
+            aws_account_number: the number of the AWS account hosting the
+                   AVL
+            creator_tag: the value to be used for the "creator" tag applied
+                   to the bucket access user
+            resource_prefix: prefix to use when constructing the IAM user
+                   name from the AVL user name
         """
         self.user_name = user_name
         self.resource_prefix = resource_prefix

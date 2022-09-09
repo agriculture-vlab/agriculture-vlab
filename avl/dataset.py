@@ -27,10 +27,10 @@ import pandas as pd
 import pyproj
 import xarray as xr
 
-CRS_CRS84 = pyproj.crs.CRS.from_string('CRS84')
+CRS_CRS84 = pyproj.crs.CRS.from_string("CRS84")
 
 DEFAULT_METADATA = dict(
-    Conventions='CF-1.7',
+    Conventions="CF-1.7",
     title='AVL test dataset',
     summary='This dataset is used to demonstrate the AVL'
             ' common dataset convention',
@@ -53,7 +53,7 @@ def new_dataset(
         time_units: str = 'seconds since 1970-01-01T00:00:00',
         time_calendar: str = 'proleptic_gregorian',
         time_periods: int = 5,
-        time_res: str = '1D',
+        time_res: str = "1D",
         time_start: str = '2010-01-01T00:00:00',
         use_cftime: bool = False,
         drop_bounds: bool = False,
@@ -70,45 +70,47 @@ def new_dataset(
         2. numpy data type
         3. variable metadata
 
-    :param xy_size: Number of spatial x,y grid cells.
-        Defaults to (3600, 1800).
-    :param xy_tile_size: Optional spatial tile size in grid cells.
-        Defaults to None (= automatic chunking).
-    :param xy_names: Names of the x,y coordinate variables.
-        Defaults to ('lon', 'lat).
-    :param xy_dtype: Data type of both x and y coordinate.
-        Defaults to 'float64'.
-    :param xy_units: Units of the x,y coordinates.
-        Defaults to ('degrees_east', 'degrees_north').
-    :param xy_start: Minimum x,y values.
-        Defaults to (-180, -90).
-    :param xy_res: Spatial resolution in x,y directions.
-        Defaults to 1.0.
-    :param inverse_y: Whether to create an inverse y axis. Defaults to False.
-    :param time_name: Name of the time coordinate variable. Defaults to 'time'.
-    :param time_periods: Number of time steps. Defaults to 5.
-    :param time_res: Duration of each time step. Defaults to `1D'.
-    :param time_start: First time value. Defaults to '2010-01-01T00:00:00'.
-    :param time_dtype: Numpy data type for time coordinates.
-        Defaults to 'datetime64[s]'.
-        If used, parameter 'use_cftime' must be False.
-    :param time_units: Units for time coordinates.
-        Defaults to 'seconds since 1970-01-01T00:00:00'.
-    :param time_calendar: Calender for time coordinates.
-        Defaults to 'proleptic_gregorian'.
-    :param use_cftime: If True, the time will be given as data types
-        according to the 'cftime' package. If used, the time_calendar
-        parameter must be also be given with an appropriate value
-        such as 'gregorian' or 'julian'. If used, parameter 'time_dtype'
-        must be None.
-    :param drop_bounds: If True, coordinate bounds variables are not created.
-        Defaults to False.
-    :param variables: Dictionary of data variables to be added.
-        None by default.
-    :param crs: pyproj-compatible CRS string or instance
-        of pyproj.CRS or None
-    :param metadata: Metadata to be included in global attributes.
-    :return: A dataset instance
+    Args:
+        xy_size: Number of spatial x,y grid cells.
+            Defaults to (3600, 1800).
+        xy_tile_size: Optional spatial tile size in grid cells.
+            Defaults to None (= automatic chunking).
+        xy_names: Names of the x,y coordinate variables.
+            Defaults to ('lon', 'lat).
+        xy_dtype: Data type of both x and y coordinate.
+            Defaults to 'float64'.
+        xy_units: Units of the x,y coordinates.
+            Defaults to ('degrees_east', 'degrees_north').
+        xy_start: Minimum x,y values.
+            Defaults to (-180, -90).
+        xy_res: Spatial resolution in x,y directions.
+            Defaults to 1.0.
+        inverse_y: Whether to create an inverse y axis. Defaults to False.
+        time_name: Name of the time coordinate variable. Defaults to 'time'.
+        time_periods: Number of time steps. Defaults to 5.
+        time_res: Duration of each time step. Defaults to `1D'.
+        time_start: First time value. Defaults to '2010-01-01T00:00:00'.
+        time_dtype: Numpy data type for time coordinates.
+            Defaults to 'datetime64[s]'.
+            If used, parameter 'use_cftime' must be False.
+        time_units: Units for time coordinates.
+            Defaults to 'seconds since 1970-01-01T00:00:00'.
+        time_calendar: Calender for time coordinates.
+            Defaults to 'proleptic_gregorian'.
+        use_cftime: If True, the time will be given as data types
+            according to the 'cftime' package. If used, the time_calendar
+            parameter must be also be given with an appropriate value
+            such as 'gregorian' or 'julian'. If used, parameter 'time_dtype'
+            must be None.
+        drop_bounds: If True, coordinate bounds variables are not created.
+            Defaults to False.
+        variables: Dictionary of data variables to be added.
+            None by default.
+        crs: pyproj-compatible CRS string or instance
+            of pyproj.CRS or None
+        metadata: Metadata to be included in global attributes.
+    Returns:
+        A dataset instance
     """
     if isinstance(xy_size, int):
         xy_size = xy_size, xy_size
