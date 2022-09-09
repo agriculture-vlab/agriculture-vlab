@@ -120,7 +120,7 @@ def cat(output_dir_path='.',
                 has_error = 'error' in descriptor
                 fp_catalogue.write(
                     f'* [{data_id}]({rel_data_id_path})'
-                    f'{' Error!' if has_error else ''}\n'
+                    f"{' Error!' if has_error else ''}\n"
                 )
                 with open(abs_data_id_path, 'w') as fp_data_id:
                     json.dump(descriptor, fp_data_id, indent=2)
