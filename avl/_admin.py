@@ -44,6 +44,14 @@ class AwsResourceCreator:
     AVL, as well as an IAM "user manager" user with restricted permissions to
     create IAM bucket access users, and a policy to be used as a permissions
     boundary for the bucket access users.
+
+    The resource creation methods in this class are not guaranteed to be
+    idempotent: they implicitly assume that the required resources are not
+    yet present. If identically-named resources are already present (e.g.
+    because a resource creation method is called twice in succession),
+    errors may result. It is the caller's responsibility to ensure that no
+    identically-named resources are present before calling a resource
+    creation method.
     """
 
     def __init__(self, aws_account_number: str, creator_tag: str,

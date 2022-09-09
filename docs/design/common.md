@@ -199,6 +199,10 @@ In addition to the user-accessible buckets, there is a configuration bucket
 `xcube-viewer-app` which provides the configuration for the xcube viewer
 component of the exploitation subsystem.
 
+Data usage in the user-writeable buckets is automatically monitored by an
+automatic storage monitoring subcomponent, which alerts the AVL operators via
+email if excess usage is detected.
+
 #### Function
 
 The function of the object storage system is similar to that of a traditional
@@ -213,7 +217,8 @@ format) to very large datasets.
 
 #### Dependencies
 
-None.
+The Object Storage component uses IAM policies created by the User Management
+component to manage user read and write permissions for its buckets.
 
 #### Interfaces
 
