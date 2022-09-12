@@ -6,7 +6,7 @@ architectural point of view.
 The logical data flow of the TAO platform is provided in the next
 figure:
 
-<img src="media/image1.png" style="width:6.49653in;height:3.27917in" />
+![](./media/image1.png)
 
 Logical data flow of the TAO platform
 
