@@ -1,15 +1,14 @@
 ## Platform design
 
 This section contains a description of the TAO platform from
-architectural point of view, emphasizing thus the connection of the SVVP
-with the Software Design Document (SDD) document.
+architectural point of view.
 
-The logical data flow of the TAO platform is provided in the following
+The logical data flow of the TAO platform is provided in the next
 figure:
 
 <img src="media/image1.png" style="width:6.49653in;height:3.27917in" />
 
-Figure 2‑1 : Logical data flow of the TAO platform
+Logical data flow of the TAO platform
 
 From logical data flow point of view we can distinguish the components:
 
@@ -558,17 +557,17 @@ platform shall be the one from the table:</p>
 <tbody>
 <tr class="odd">
 <td>Orfeo Toolbox</td>
-<td>5.8.0</td>
+<td>7.3.0</td>
 <td>Processing Components</td>
 </tr>
 <tr class="even">
 <td>SNAP</td>
-<td>5.0.2</td>
+<td>9.0.0</td>
 <td>Processing Components</td>
 </tr>
 <tr class="odd">
 <td>GDAL</td>
-<td>2.1.0</td>
+<td>3.2.2</td>
 <td>Processing Components</td>
 </tr>
 <tr class="even">
