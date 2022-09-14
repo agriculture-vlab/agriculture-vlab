@@ -19,6 +19,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+"""Dataset manipulation and analysis functions"""
 
 from typing import Dict, Any, Tuple, List, Union
 
@@ -286,6 +287,16 @@ def get_geospatial_attrs(
         res: Tuple[float, float],
         crs: pyproj.CRS
 ) -> Dict[str, Any]:
+    """Return a dictionary of geospatial attributes
+
+    Args:
+        bbox: bounding box
+        res: resolution
+        crs: co-ordinate reference system
+
+    Returns:
+        a dictionary of geospatial attributes for the specified parameters
+    """
     if crs.is_geographic:
         lon_min, lat_min, lon_max, lat_max = bbox
         lon_res, lat_res = res
@@ -331,6 +342,15 @@ def get_time_coverage_attrs(
         time_range: Tuple[pd.Timestamp, pd.Timestamp],
         time_period: str,
 ) -> Dict[str, Any]:
+    """Return a dictionary of time coverage attributes
+
+    Args:
+        time_range: a time range specified as a 2-tuple of timestamps
+        time_period: a time resolution in ISO 8601:2004 time duration format
+
+    Returns:
+        A dictionary of time coverage attributes for the specified parameters
+    """
     return dict(
         time_coverage_start=str(time_range[0]),
         time_coverage_end=str(time_range[1]),
@@ -341,6 +361,15 @@ def get_time_coverage_attrs(
 
 
 def from_crs84(coord: Tuple[float, float], crs_to: pyproj.CRS):
+    """Convert co-ordinates from CRS:84
+
+    Args:
+        coord: Co-ordinates in the CRS:84 co-ordinate reference system
+        crs_to: CRS to which to convert the co-ordinates
+
+    Result:
+        Corresponding co-ordinates in the requested CRS
+    """
     x, y = coord
     transformer = pyproj.Transformer.from_crs(crs_from=CRS_CRS84,
                                               crs_to=crs_to)

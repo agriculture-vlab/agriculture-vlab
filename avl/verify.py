@@ -98,8 +98,17 @@ def verify_dataset(
     return all_issues
 
 
-def make_report(dataset_list_path: str):
-    """Make report"""
+def make_report(dataset_list_path: str) -> str:
+    """Make dataset verification report
+
+    Args:
+        dataset_list_path: path to a text file containing a list of dataset
+        paths (one per line)
+
+    Returns:
+        A string containing Markdown source for a table summarizing
+        verification results for the files listed in the input file
+    """
     with open(dataset_list_path, 'r') as fh:
         ds_paths = list(map(lambda s: s.strip(), fh.readlines()))
 
@@ -115,6 +124,11 @@ def make_report(dataset_list_path: str):
 
 
 def get_rules() -> List[Rule]:
+    """Get verification rules
+
+    Returns:
+         A list containing all the rules used for verification
+    """
     return [
         check_global_attrs,
         check_time_coord,
@@ -123,6 +137,13 @@ def get_rules() -> List[Rule]:
 
 
 def check_global_attrs(ds: xr.Dataset) -> List[Issue]:
+    """Return a list of issues related to global attributes
+
+    Args:
+        ds: a dataset to check
+
+    Returns:
+         a list of issues related to global attributes"""
     issues = []
     for attr_name in _EXPECTED_GLOBAL_ATTRS:
         issues += _check_global_attr(ds, attr_name)
@@ -130,6 +151,13 @@ def check_global_attrs(ds: xr.Dataset) -> List[Issue]:
 
 
 def check_time_coord(ds: xr.Dataset) -> List[Issue]:
+    """Return a list of issues related to time co-ordinates
+
+    Args:
+        ds: a dataset to check
+
+    Returns:
+         a list of issues related to time co-ordinates"""
     issues = []
     issues += _check_variable(ds, 'time')
     issues += _check_mono_inc(ds, 'time')
@@ -148,6 +176,15 @@ def check_time_coord(ds: xr.Dataset) -> List[Issue]:
 
 
 def check_xy_coords(ds: xr.Dataset) -> List[Issue]:
+    """Return a list of issues related to x/y co-ordinates
+
+    Args:
+        ds: a dataset to check
+
+    Returns:
+        a list of issues related to x/y co-ordinates
+    """
+
     issues = []
 
     yx_dims = None
