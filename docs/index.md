@@ -25,7 +25,7 @@ and descriptions of the AVL-specific command-line and Python interfaces.
 1.  [Exploitation subsystem: JupyterLab](guide/exploitation/jupyter.md)
 2.  [Exploitation subsystem: xcube viewer](guide/exploitation/viewer.md) <!-- 3. [Exploitation subsystem: xcube catalogue](guide/exploitation/catalogue.md) -->
 3.  [Thematic processing subsystem](guide/processing/index.md)
-4.  [AVL Python API](guide/python-api.md)
+4.  [AVL Python API](api/avl/)
 5.  [AVL command-line tools](guide/tools.md)
 
 ### Datasets
@@ -34,12 +34,13 @@ AVL provides a variety of EO data products from multiple sources (or
 collections). They follow a well-defined dataset convention and are grouped
 according to sensor type.
 
-1.  [Dataset conventions](datasets/conventions.md)
+1.  [Dataset conventions](datasets/conventions.md) for raster datasets
 2.  [Altimetric datasets](datasets/altimetric.md)
 3.  [Atmospheric datasets](datasets/atmospheric.md)
 4.  [Optical datasets](datasets/optical.md)
 5.  [Passive microwave datasets](datasets/passive_microwave.md)
 6.  [Radar datasets](datasets/radar.md)
+7.  [Vector datasets](datasets/vector.md)
 
 ### Design
 
