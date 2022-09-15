@@ -20,6 +20,7 @@ nav:
     - Optical datasets: datasets/optical.md
     - Passive microwave datasets: datasets/passive_microwave.md
     - Radar datasets: datasets/radar.md
+    - Vector datasets: datasets/vector.md
   - Design:
     - Overview: design/index.md
     - Architecture and common components: design/common.md
