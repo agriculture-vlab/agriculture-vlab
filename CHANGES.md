@@ -1,10 +1,34 @@
-## Changes in version 0.1.5 (in development)
+## Changes in version 0.2.0
 
- * Set bucket access policies in admin module.
+ * Implement setting of bucket access policies in Python admin module.
+
+ * Implement configuration of bucket size monitoring in Python admin module.
+
+ * Python source code: expand and improve Pydoc and comments and standardize
+   code style.
+
+ * Reorganize, expand, and update the design documents, particularly for the
+   thematic processing subsystem and object storage system.
+
+ * Add a list of vector datasets to the documentation.
+
+ * Add documentation of the test procedures for the thematic processing
+   subsystem.
+
+## Changes in version 0.1.6
+
+ * Expand and improve the design documentation for Jupyter Hub.
+
+ * Expand and improve the design documentation for the object storage system.
+
+## Changes in version 0.1.5
+
+ * Expand and improve the design documentation for the exploitation subsystem.
 
 ## Changes in version 0.1.4
 
  * Fix a bug in public user data bucket access policy.
+
  * Update and expand documentation.
 
 ## Changes in version 0.1.3
@@ -22,6 +46,9 @@
 ## Changes in version 0.1.0
 
  * Implement `cli` module.
+
  * Implement `dataset` module.
+
  * Implement `verify` module.
+
  * Implement `_admin` module.
