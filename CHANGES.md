@@ -1,3 +1,7 @@
+## Changes in version 0.2.1 (in development)
+
+ * Update exploitation system user guide.
+
 ## Changes in version 0.2.0
 
  * Implement setting of bucket access policies in Python admin module.
