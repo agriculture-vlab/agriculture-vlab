@@ -56,6 +56,7 @@ class TestAdmin:
         for bucket in expected_buckets:
             assert {'creator': creator_tag,
                     'project': 'avl',
+                    'cost-center': 'avl',
                     'create-date': datetime.now().strftime(r'%Y-%m-%d')} == \
                    _boto_dict_to_dict(s3_client.get_bucket_tagging(
                        Bucket=bucket)['TagSet'])
@@ -102,7 +103,6 @@ class TestAdmin:
         iam_client = boto3.client('iam')
 
         policy = self._create_boundary_policy(iam_client)
-        policy_arn = policy['Policy']['Arn']
         creator = BucketAccessUserCreator(user_name=user_name,
                                           client_id='AKIA-dummy',
                                           client_secret='dummy',
@@ -123,6 +123,7 @@ class TestAdmin:
 
         assert {'creator': creator_tag,
                 'project': 'avl',
+                'cost-center': 'avl',
                 'create-date': datetime.now().strftime(r'%Y-%m-%d')} == \
                _boto_dict_to_dict(user_response['User']['Tags'])
 

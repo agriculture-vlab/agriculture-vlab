@@ -495,6 +495,7 @@ class BucketAccessUserCreator:
                 Key='create-date', Value=datetime.now().strftime(r'%Y-%m-%d')
             ),
             dict(Key='project', Value='avl'),
+            dict(Key='cost-center', Value='avl')
         ]
 
     def ensure_user_and_create_key(self) -> Tuple[str, str]:
