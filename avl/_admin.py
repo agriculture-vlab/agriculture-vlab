@@ -95,6 +95,7 @@ class AwsResourceCreator:
                 Key='create-date', Value=datetime.now().strftime(r'%Y-%m-%d')
             ),
             dict(Key='project', Value='avl'),
+            dict(Key='cost-center', Value='avl'),
         ]
         self.aws_account_number = aws_account_number
         self.aws_account_id = 'arn:aws:iam::' + aws_account_number

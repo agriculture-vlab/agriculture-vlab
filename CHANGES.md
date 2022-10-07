@@ -2,6 +2,8 @@
 
  * Update exploitation system user guide.
 
+ * Apply `cost-center` tags to resources created by the `_admin` module.
+
 ## Changes in version 0.2.0
 
  * Implement setting of bucket access policies in Python admin module.
