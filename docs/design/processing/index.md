@@ -467,3 +467,98 @@ from the supported toolboxes. Main functionalities are:
 -   create a workflow from existing toolboxes,
 
 -   validate a workflow
+
+## Authentication and Authorization
+
+### General
+
+The Authentication and Authorization component contains the
+implementation for user access to the AVL platform, secures user access
+to the application, and manages user permissions to different parts of
+the platform.
+
+### Function
+
+The Authentication and Authorization component provides an interface
+that is implemented by the authentication specific mechanism, so
+that this mechanism can be changed or decoupled from the interface.
+Also, there is an authorization interface which is implemented by the
+authorization mechanism providing the user authorization through the
+system.
+
+### Dependencies
+
+Every graphical user interface module that calls backend business logic
+needs to authenticate in order to have access to the desired data.
+The Authentication and Authorization component uses encryption and
+hashing mechanisms. It also uses the Persistence Manager component
+for database users and permissions management.
+
+### Interfaces
+
+The main interfaces in term of data flow of this component are:
+
+-   As inputs:
+    -   The username and password for login,
+    -   The user password for password reset.
+-   As outputs:
+    -   The login action result (successful or not),
+    -   The password reset action result (successful or not).
+
+### Data
+
+The data handled by this component are the user's credentials and rights,
+which, depending on the authentication mechanism, can be retrieved from the
+AVL database using Persistence Manager or from an external authentication and
+authorization user management system. The service also provides API access
+tokens to authenticated clients, which are then used by a service to authorise
+internal and external access.
+
+### Remarks
+
+AVL uses the [*Keycloak*](https://www.keycloak.org/) software for simplifying,
+but also to increase the spectrum of, the authentication mechanism. Keycloak
+adds authentication to applications and secures services with minimum work. It
+supports, among others, user federation, identity brokering and social login.
+
+## User Management
+
+### General
+
+The User Management component contains the implementation for user management
+in the AVL platform. The purpose of the User Management component is to define
+the users allowed to use the platform, and to define their quota in terms of
+storage and computing resources (CPU, memory).
+
+### Function
+
+The User Management component provides an interface so that all other
+components interacting with the user management will use the functionalities
+exposed by it. The main functionalities of the component are:
+
+-   add a new user by providing a username and an email address,
+
+-   update user credentials (by setting password provided by user after
+    account activation),
+
+-   set and update user quota,
+
+-   remove/deactivate a user.
+
+### Dependencies
+
+The User Management component uses the Persistence Manager component for
+storing user details in the AVL database.
+
+### Interfaces
+
+The module exposes a Java API (for integration with other Java
+components) and a REST API (for usage from heterogeneous clients,
+including web clients).
+
+### Data
+
+The data handled by this component are the user details (credentials and
+quota), which can be saved/retrieved into/from the AVL database using
+Persistence Manager.
+

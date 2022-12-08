@@ -19,7 +19,7 @@ AVL's users, other data sources such as Sentinel Hub or xcube geoDB, and the
 user-facing applications Jupyter Lab and the Interactive Visualisation.
 Moreover, both subsystems share a couple of Common Components.
 
-## Software Components Design – Common
+## Software components design – common
 
 The AVL Thematic Processing and AVL Exploitation subsystems share
 several common components. This section describes the components
@@ -31,14 +31,22 @@ depicted in the following diagram:
 Please note that data visualisation is not a component on its own. Each
 subsystem is having its own specialised data viewers.
 
-### Authentication and Authorization
+### Authentication, authorization, and user management
 
 #### General
 
-The Authentication and Authorization component contains the
+The Authentication and Authorization component provides the
 implementation for user access to the AVL platform, secures user access
 to the application, and manages user permissions to different parts of
 the platform.
+
+The service also provides API access tokens to authenticated clients, which are
+then used by a service to authorise internal and external access.
+
+The use of a dedicated authentication and authorization service allows the
+implementation of a single sign-on system for all the subcomponents of the
+AVL, so that a user only needs to log in once to use all the components, and
+log out once at the end of their session.
 
 #### Function
 
@@ -49,81 +57,54 @@ Also, there is an authorization interface which is implemented by the
 authorization mechanism providing the user authorization through the
 system.
 
-#### Dependencies
-
-Every graphical user interface module that calls backend business logic
-needs to authenticate in order to have access to the desired data.
-The Authentication and Authorization component uses encryption and
-hashing mechanisms. It also uses the Persistence Manager component
-for database users and permissions management.
-
-#### Interfaces
-
-The main interfaces in term of data flow of this component are:
-
--   As inputs:
-    -   The username and password for login,
-    -   The user password for password reset.
--   As outputs:
-    -   The login action result (successful or not),
-    -   The password reset action result (successful or not).
-
-#### Data
-
-The data handled by this component are the user's credentials and rights,
-which, depending on the authentication mechanism, can be retrieved from the
-AVL database using Persistence Manager or from an external authentication and
-authorization user management system. The service also provides API access
-tokens to authenticated clients, which are then used by a service to authorise
-internal and external access.
-
-#### Remarks
-
-AVL uses the [*Keycloak*](https://www.keycloak.org/) software for simplifying,
-but also to increase the spectrum of, the authentication mechanism. Keycloak
-adds authentication to applications and secures services with minimum work. It
-supports, among others, user federation, identity brokering and social login.
-
-### User Management
-
-#### General
-
-The User Management component contains the implementation for user management
-in the AVL platform. The purpose of the User Management component is to define
-the users allowed to use the platform, and to define their quota in terms of
-storage and computing resources (CPU, memory).
-
-#### Function
-
-The User Management component provides an interface so that all other
-components interacting with the user management will use the functionalities
-exposed by it. The main functionalities of the component are:
-
--   add a new user by providing a username and an email address,
-
--   update user credentials (by setting password provided by user after
-    account activation),
-
--   set and update user quota,
-
--   remove/deactivate a user.
+Authentication and authorization in the AVL are implemented using
+[Keycloak](https://www.keycloak.org/), an open-source software package which
+provides extensive identity and access management (IAM) functionality. AVL's IAM
+resources are managed within a dedicated realm on a Keycloak server; since
+a Keycloak server can host multiple realms, this means that a dedicated
+Keycloak server is not necessary for AVL.
 
 #### Dependencies
 
-The User Management component uses the Persistence Manager component for
-storing user details in the AVL database.
+Keycloak is implemented in Java, and its only external dependency is an
+OpenJDK 11 runtime environment. Other dependencies, notably the WildFly
+application server, are bundled with the Keycloak distribution itself.
 
 #### Interfaces
 
-The module exposes a Java API (for integration with other Java
-components) and a REST API (for usage from heterogeneous clients,
-including web clients).
+For configuration and administration, Keycloak provides three main interfaces:
+an HTTP REST API, an interactive web GUI, and a provider for the Terraform
+configuration management system.
+
+For interfacing with clients, Keycloak supports the OpenID Connect (OIDC)
+protocol (implemented using OAuth 2.0) and Security Assertion Markup Language
+(SAML). All current AVL Keycloak clients interface with the Keycloak server
+using OIDC.
 
 #### Data
 
-The data handled by this component are the user details (credentials and
-quota), which can be saved/retrieved into/from the AVL database using
-Persistence Manager.
+The most important resources which Keycloak manages within the AVL realm are:
+
+Users
+:   Users of the system, including their group membership, personal details, and
+login credentials.
+
+Clients
+:   Other parts of the AVL system which make use of the Keycloak subsystem
+to manage user authentication and authorization.
+
+Groups
+:   Used to manage user authorization levels. AVL uses two groups representing
+different privilege levels: `service_users` for ordinary users and
+`service_providers` for administrators. Group membership is communicated to
+clients during the user log-in process; the client can then use this
+information to provide appropriate user privileges.
+
+Roles
+:   Used for fine-grained authorization control, for instance management of read
+and/or write access to the various AVL object storage buckets. Like group
+memberships, a user's current roles are communicated to the client during
+log-in.
 
 ### Object storage
 
@@ -159,20 +140,20 @@ particular purposes and access settings:
 
 -   `user-private`: personal, private object storage. Users can only read
     and write under their own user prefix, similar to a home directory.
-
+  
 -   `user-public`: shared user data. Users can only write under their own
     user prefix, but all data is readable to all users.
-
+  
 -   `scratch`: temporary shared storage. All AVL users can read and write
     freely in the whole bucket, and data are deleted automatically after two
     days.
-
+  
 -   `data`: pre-processed, standard data sets made available for all users by
     the AVL project.
-
+  
 -   `staging`: a staging area for the data_store store. Data here are migrated
     to the `data` bucket once they have been thoroughly tested.
-
+  
 -   `test`: A pre-staging area for the `staging` and `data` buckets. Data here
     are migrated to `staging` after some initial testing.
 
@@ -187,13 +168,13 @@ appropriate AWS IAM policies to both buckets and IAM users by a Python module
 in the AVL codebase. The module is used at two points in the S3 bucket
 lifecycle:
 
--   By the system operator, to create the buckets and associated resources
-    (policies, IAM users, and permissions boundaries) during initial set-up
-    and configuration of the AVL.
+- By the system operator, to create the buckets and associated resources
+  (policies, IAM users, and permissions boundaries) during initial set-up
+  and configuration of the AVL.
 
--   By the Jupyter Hub runtime, to create IAM users (if required) on user
-    log-in and configure their bucket access via IAM policies; see the
-    Jupyter Hub section of this documentation for further details.
+- By the Jupyter Hub runtime, to create IAM users (if required) on user
+  log-in and configure their bucket access via IAM policies; see the
+  Jupyter Hub section of this documentation for further details.
 
 In addition to the user-accessible buckets, there is a configuration bucket
 `xcube-viewer-app` which provides the configuration for the xcube viewer
