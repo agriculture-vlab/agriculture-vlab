@@ -42,6 +42,10 @@ according to sensor type.
 6.  [Radar datasets](datasets/radar.md)
 7.  [Vector datasets](datasets/vector.md)
 
+Additionally, AVL provides access to other open data sets: 
+
+8.  [Open datasets](datasets/open_datasets.md) 
+
 ### Design
 
 This section documents the system design, development resources, test
