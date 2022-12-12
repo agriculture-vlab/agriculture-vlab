@@ -1,8 +1,14 @@
-## Changes in version 0.2.1 (in development)
+## Changes in version 0.2.1
 
- * Update exploitation system user guide.
+ * Update, expand, and reorganize documentation: design documents, exploitation
+   system user guide, exploitation system test results, software reuse file. 
 
- * Apply `cost-center` tags to resources created by the `_admin` module.
+ * Apply `cost-center` tags to resources created by the `_admin` module
+   and to dynamically created IAM users, and update unit tests accordingly.
+
+ * Pin package versions in doc requirements file
+
+ * Add list of open datasets to dataset documentation.
 
 ## Changes in version 0.2.0
 
