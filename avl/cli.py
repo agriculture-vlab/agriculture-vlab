@@ -259,5 +259,15 @@ def new():
                variables=variables)
 
 
+@main.command()
+def catalogue():
+    from avl.catalogue import Catalogue
+    from xcube.core.store import new_data_store
+    staging_store = new_data_store(
+        "s3", root="agriculture-vlab-data-staging/", max_depth=8
+    )
+    cat = Catalogue(stores=dict(staging=staging_store), dest_dir='catalogue')
+    cat.create_catalogue()
+
 if __name__ == '__main__':
     main()
