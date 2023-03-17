@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
+from typing import Optional
 
 import click
 
@@ -260,14 +261,17 @@ def new():
 
 
 @main.command()
-def catalogue():
+@click.option('--max-datasets', metavar='N', type=int, default=None,
+              help='maximum number of datasets to catalogue per data store')
+@click.option('--use-stock-map', is_flag=True,
+              help='use very low-res stock map tiles instead of web tiles')
+def catalogue(max_datasets: Optional[int] = None,
+              use_stock_map: bool = False):
     from avl.catalogue import Catalogue
-    from xcube.core.store import new_data_store
-    staging_store = new_data_store(
-        "s3", root="agriculture-vlab-data-staging/", max_depth=8
-    )
-    cat = Catalogue(stores=dict(staging=staging_store), dest_dir='catalogue')
-    cat.create_catalogue()
+    catalogue = Catalogue(dest_dir='catalogue', max_datasets=max_datasets,
+                          use_stock_map=use_stock_map)
+    catalogue.write_catalogue()
+
 
 if __name__ == '__main__':
     main()

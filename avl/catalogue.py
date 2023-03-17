@@ -5,8 +5,8 @@ import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
-from typing import Union, Any, Dict, List
-from xcube.core.store.store import DataStore, MutableDataStore
+from typing import Any, Dict, Optional
+from xcube.core.store import new_data_store
 import pathlib
 import itertools
 
@@ -14,30 +14,109 @@ import itertools
 class Catalogue:
     def __init__(
         self,
-        stores: Dict[str, Union['DataStore', 'MutableDataStore']],
         dest_dir: str,
+        max_datasets: Optional[int] = None,
+        use_stock_map: bool = False
     ):
-        self.stores = stores
+        self.store_records = self.create_stores()
         self.dest_dir = pathlib.Path(dest_dir)
+        self.max_datasets = max_datasets
+        self.use_stock_map = use_stock_map
 
-    def create_catalogue(self):
+    @staticmethod
+    def create_stores() -> Dict[str, 'StoreRecord']:
+        max_depth = 8
+
+        store_definitions = [
+            # (
+            #     'lab',
+            #     'Jupyter lab',
+            #     'lab_store',
+            #     dict(data_store_id="file", root="/home/jovyan/"),
+            # ),
+            # (
+            #     'user',
+            #     'User data (private)',
+            #     'user_store',
+            #     dict(
+            #         data_store_id="s3",
+            #         root=f"agriculture-vlab-user/{os.environ['JUPYTERHUB_USER']}/",
+            #         max_depth=max_depth,
+            #     ),
+            # ),
+            # (
+            #     'scratch',
+            #     'Scratch (temporary)',
+            #     'scratch_store',
+            #     dict(
+            #         data_store_id="s3",
+            #         root="agriculture-vlab-scratch/",
+            #         max_depth=max_depth,
+            #     ),
+            # ),
+            # (
+            #     'test',
+            #     'AVL data (testing)',
+            #     'test_store',
+            #     dict(
+            #         data_store_id="s3",
+            #         root="agriculture-vlab-data-test/",
+            #         max_depth=max_depth,
+            #     ),
+            # ),
+            (
+                'staging',
+                'AVL data (staging)',
+                'staging_store',
+                dict(
+                    data_store_id="s3",
+                    root="agriculture-vlab-data-staging/",
+                    max_depth=max_depth,
+                ),
+            ),
+            # (
+            #     'data',
+            #     'AVL data',
+            #     'data_store',
+            #     dict(
+            #         data_store_id="s3",
+            #         root="agriculture-vlab-data/",
+            #         max_depth=max_depth,
+            #     ),
+            # ),
+            # (
+            #     'public',
+            #     'User data (shared)',
+            #     'public_store_read',
+            #     dict(
+            #         data_store_id="s3",
+            #         root=f"agriculture-vlab-public/",
+            #         max_depth=max_depth,
+            #     ),
+            # ),
+        ]
+
+        return {args[0]: StoreRecord(*args) for args in store_definitions}
+
+    def write_catalogue(self):
         pathlib.Path.mkdir(self.dest_dir, parents=True, exist_ok=True)
         index_path = self.dest_dir / 'index.md'
         with open(index_path, 'w') as fh:
             fh.write('# Dataset catalogue\n\n## Stores\n\n')
-            for store_id in self.stores:
+            for store_id in self.store_records:
                 fh.write(f' - [{store_id}]({store_id}/index.md)\n')
                 self.make_catalogue_for_store(store_id)
 
     def make_catalogue_for_store(self, store_id: str):
         path = self.dest_dir / store_id
         pathlib.Path.mkdir(path, parents=True, exist_ok=True)
-        data_ids = self.stores[store_id].get_data_ids()
+        data_ids = self.store_records[store_id].store.get_data_ids()
+        data_ids_slice = data_ids if self.max_datasets is None else itertools.islice(
+                data_ids, 0, self.max_datasets
+            )
         with open(path / 'index.md', 'w') as fh:
             fh.write(f'# Data store: {store_id}\n\n')
-            for data_id in itertools.islice(
-                data_ids, 0, 40
-            ):  # TODO add parameter
+            for data_id in data_ids_slice:  # TODO add parameter
                 fh.write(
                     f' - [{data_id}]({self.data_id_to_filename(data_id)})\n'
                 )
@@ -47,15 +126,24 @@ class Catalogue:
         basename = self.data_id_to_filename(data_id)
         path = self.dest_dir / store_id / basename
         with open(str(path) + '.md', 'w') as fh:
-            ds = self.stores[store_id].open_data(data_id)
+            print(store_id, data_id)
+            ds = self.store_records[store_id].store.open_data(data_id)
             title = (
                 ds.attrs.get('title', data_id)
                 if hasattr(ds, 'attrs')
                 else data_id
             )
             fh.write(f'# Dataset: {title}\n\n')
-            fh.write(f'Identifier: {data_id}<br>\n')
-            fh.write(f'Data store: {store_id}<br>\n')
+            fh.write(f'*Dataset identifier:* {data_id}<br>\n')
+            fh.write(f'*Data store:* {store_id}<br>\n')
+            # TODO: link to open in viewer?
+            fh.write(
+                '## How to open this dataset in AVL JupyterLab\n'
+                '```python\n'
+                f'ds = {self.store_records[store_id].var_name}.'
+                f'open_data("{data_id}")\n'
+                '```\n\n'
+            )
             if not hasattr(ds, 'attrs'):
                 return
             fh.write(f'![Bounding box map]({basename + ".png"})<br>\n')
@@ -71,30 +159,19 @@ class Catalogue:
             )
             self.make_map(ds.attrs, str(path) + '.png')
             fh.write(self.dataset_attrs_to_markdown(ds.attrs))
-            fh.write(
-                self.variables_to_markdown(ds.variables)
-            )
-            # TODO: link to open in viewer?
-            fh.write(
-                '## How to open this dataset in AVL JupyterLab\n'
-                '```python\n'
-                f'ds = {store_id}.open_data("{data_id}")\n'
-                '```\n\n'
-            )
+            fh.write(self.variables_to_markdown(ds.variables))
+
             fh.write('## Full variable metadata\n\n')
             for var_name, variable in ds.variables.items():
-                variable_source_filename = (
-                    basename + '-' + var_name + '.md'
-                )
-                variable_source_path = \
+                variable_source_filename = basename + '-' + var_name + '.md'
+                variable_source_path = (
                     self.dest_dir / store_id / variable_source_filename
-                fh.write(
-                    f'### <a name="{var_name}"></a>'
-                    f'{var_name}\n\n'
                 )
+                fh.write(f'### <a name="{var_name}"></a>' f'{var_name}\n\n')
                 fh.write(
-                    self.make_table(variable.attrs,
-                                    source_link=variable_source_filename)
+                    self.make_table(
+                        variable.attrs, source_link=variable_source_filename
+                    )
                 )
                 if 'source' in variable.attrs:
                     with open(variable_source_path, 'w') as var_source_fh:
@@ -220,8 +297,7 @@ class Catalogue:
         else:
             return content
 
-    @staticmethod
-    def make_map(props: Dict[str, Any], output_path: str) -> None:
+    def make_map(self, props: Dict[str, Any], output_path: str) -> None:
         """Create a bounding box map from a dataset's properties
 
         The map shows the dataset's bounding box at the centre of a map covering a
@@ -269,14 +345,17 @@ class Catalogue:
                 crs=cartopy.crs.Geodetic(),
             )
 
-        # We use a crude test to choose the tile resolution; ideally we should
-        # calculate this more carefully from the bbox size and final image
-        # resolution.
+        # We use a fairly crude calculation to choose the tile resolution;
+        # ideally we should take the pixel dimensions of the final image
+        # into account here as well as the geographical bounding box size.
         max_dim_deg = max(w, h)
         if max_dim_deg > 45:
             max_dim_deg = 360
         zoom_level = 3 + int(math.log2(360 / max_dim_deg))
-        ax.add_image(image_tiles, zoom_level)
+        if self.use_stock_map:
+            ax.stock_img()  # very low-res but very fast, so useful for testing
+        else:
+            ax.add_image(image_tiles, zoom_level)
 
         bbox_rect_patch = patches.Rectangle((x0, y0), w, h)
         # Since projected rectangle sides may not be straight, we interpolate
@@ -299,3 +378,23 @@ class Catalogue:
         plt.tight_layout(pad=0)
         plt.savefig(output_path, bbox_inches='tight', pad_inches=0.1)
         # plt.close()  # TODO fix this
+
+
+class StoreRecord:
+    """Creates and wraps a store with some catalogue-releant metadata"""
+
+    def __init__(self, store_id: str, desc: str, var_name: str, store_args: Dict):
+        """Initialize a store record
+
+        Args:
+            store_id: store identifier to use in the catalogue
+            desc: human-readable description of the store
+            var_name: name of pre-initialized store variable in JupyterLab
+            store_args: passed directly to `new_data_store`
+        """
+
+        self.store_id = store_id
+        self.desc = desc
+        self.var_name = var_name
+        self.store_args = store_args
+        self.store = new_data_store(**store_args)
