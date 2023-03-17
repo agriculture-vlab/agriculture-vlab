@@ -5,7 +5,7 @@ import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
 from matplotlib import pyplot as plt
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from xcube.core.store import new_data_store
 import pathlib
 import itertools
@@ -16,24 +16,26 @@ class Catalogue:
         self,
         dest_dir: str,
         max_datasets: Optional[int] = None,
-        use_stock_map: bool = False
+        use_stock_map: bool = False,
+        store_ids: Optional[List[str]] = None
     ):
         self.store_records = self.create_stores()
         self.dest_dir = pathlib.Path(dest_dir)
         self.max_datasets = max_datasets
         self.use_stock_map = use_stock_map
+        self.store_ids = store_ids
 
     @staticmethod
     def create_stores() -> Dict[str, 'StoreRecord']:
         max_depth = 8
 
         store_definitions = [
-            # (
-            #     'lab',
-            #     'Jupyter lab',
-            #     'lab_store',
-            #     dict(data_store_id="file", root="/home/jovyan/"),
-            # ),
+            (
+                'lab',
+                'Jupyter lab',
+                'lab_store',
+                dict(data_store_id="file", root=str(pathlib.Path.home())),
+            ),
             # (
             #     'user',
             #     'User data (private)',
@@ -44,26 +46,26 @@ class Catalogue:
             #         max_depth=max_depth,
             #     ),
             # ),
-            # (
-            #     'scratch',
-            #     'Scratch (temporary)',
-            #     'scratch_store',
-            #     dict(
-            #         data_store_id="s3",
-            #         root="agriculture-vlab-scratch/",
-            #         max_depth=max_depth,
-            #     ),
-            # ),
-            # (
-            #     'test',
-            #     'AVL data (testing)',
-            #     'test_store',
-            #     dict(
-            #         data_store_id="s3",
-            #         root="agriculture-vlab-data-test/",
-            #         max_depth=max_depth,
-            #     ),
-            # ),
+            (
+                'scratch',
+                'Scratch (temporary)',
+                'scratch_store',
+                dict(
+                    data_store_id="s3",
+                    root="agriculture-vlab-scratch/",
+                    max_depth=max_depth,
+                ),
+            ),
+            (
+                'test',
+                'AVL data (testing)',
+                'test_store',
+                dict(
+                    data_store_id="s3",
+                    root="agriculture-vlab-data-test/",
+                    max_depth=max_depth,
+                ),
+            ),
             (
                 'staging',
                 'AVL data (staging)',
@@ -74,26 +76,26 @@ class Catalogue:
                     max_depth=max_depth,
                 ),
             ),
-            # (
-            #     'data',
-            #     'AVL data',
-            #     'data_store',
-            #     dict(
-            #         data_store_id="s3",
-            #         root="agriculture-vlab-data/",
-            #         max_depth=max_depth,
-            #     ),
-            # ),
-            # (
-            #     'public',
-            #     'User data (shared)',
-            #     'public_store_read',
-            #     dict(
-            #         data_store_id="s3",
-            #         root=f"agriculture-vlab-public/",
-            #         max_depth=max_depth,
-            #     ),
-            # ),
+            (
+                'data',
+                'AVL data',
+                'data_store',
+                dict(
+                    data_store_id="s3",
+                    root="agriculture-vlab-data/",
+                    max_depth=max_depth,
+                ),
+            ),
+            (
+                'public',
+                'User data (shared)',
+                'public_store_read',
+                dict(
+                    data_store_id="s3",
+                    root=f"agriculture-vlab-public/",
+                    max_depth=max_depth,
+                ),
+            ),
         ]
 
         return {args[0]: StoreRecord(*args) for args in store_definitions}
@@ -104,8 +106,9 @@ class Catalogue:
         with open(index_path, 'w') as fh:
             fh.write('# Dataset catalogue\n\n## Stores\n\n')
             for store_id in self.store_records:
-                fh.write(f' - [{store_id}]({store_id}/index.md)\n')
-                self.make_catalogue_for_store(store_id)
+                if self.store_ids is None or store_id in self.store_ids:
+                    fh.write(f' - [{store_id}]({store_id}/index.md)\n')
+                    self.make_catalogue_for_store(store_id)
 
     def make_catalogue_for_store(self, store_id: str):
         path = self.dest_dir / store_id

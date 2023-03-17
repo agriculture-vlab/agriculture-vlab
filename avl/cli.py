@@ -265,11 +265,17 @@ def new():
               help='maximum number of datasets to catalogue per data store')
 @click.option('--use-stock-map', is_flag=True,
               help='use very low-res stock map tiles instead of web tiles')
+@click.option('--stores', type=str, default=None,
+              help='comma-separated IDs of stores to catalogue '
+                   '(if omitted, catalogue all stores)')
 def catalogue(max_datasets: Optional[int] = None,
-              use_stock_map: bool = False):
+              use_stock_map: bool = False,
+              stores: Optional[str] = None):
     from avl.catalogue import Catalogue
+    store_ids = None if stores is None else stores.split(",")
     catalogue = Catalogue(dest_dir='catalogue', max_datasets=max_datasets,
-                          use_stock_map=use_stock_map)
+                          use_stock_map=use_stock_map,
+                          store_ids=store_ids)
     catalogue.write_catalogue()
 
 
