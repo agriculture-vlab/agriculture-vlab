@@ -74,6 +74,13 @@ class Catalogue:
             fh.write(
                 self.variables_to_markdown(ds.variables)
             )
+            # TODO: link to open in viewer?
+            fh.write(
+                '## How to open this dataset in AVL JupyterLab\n'
+                '```python\n'
+                f'ds = {store_id}.open_data("{data_id}")\n'
+                '```\n\n'
+            )
             fh.write('## Full variable metadata\n\n')
             for var_name, variable in ds.variables.items():
                 variable_source_filename = (
