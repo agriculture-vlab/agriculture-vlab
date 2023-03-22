@@ -1,5 +1,6 @@
 import math
 import re
+import os
 import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
@@ -33,74 +34,88 @@ class Catalogue:
     def create_stores() -> Dict[str, 'StoreRecord']:
         max_depth = 8
 
-        store_definitions = [
-            (
-                'lab',
-                'Jupyter lab',
-                'lab_store',
-                dict(data_store_id="file", root=str(pathlib.Path.home())),
-            ),
-            # (
-            #     'user',
-            #     'User data (private)',
-            #     'user_store',
-            #     dict(
-            #         data_store_id="s3",
-            #         root=f"agriculture-vlab-user/{os.environ['JUPYTERHUB_USER']}/",
-            #         max_depth=max_depth,
-            #     ),
-            # ),
-            (
-                'scratch',
-                'Scratch (temporary)',
-                'scratch_store',
-                dict(
-                    data_store_id="s3",
-                    root="agriculture-vlab-scratch/",
-                    max_depth=max_depth,
+        user_store = (
+            [
+                (
+                    'user',
+                    'User data (private)',
+                    'user_store',
+                    dict(
+                        data_store_id="s3",
+                        root=f"agriculture-vlab-user/"
+                        f"{os.environ['JUPYTERHUB_USER']}/",
+                        max_depth=max_depth,
+                    ),
+                )
+            ]
+            if 'JUPYTERHUB_USER' in os.environ
+            else []
+        )
+
+        # noinspection PyTypeChecker
+        store_definitions = (
+            [
+                (
+                    'lab',
+                    'Jupyter lab',
+                    'lab_store',
+                    dict(data_store_id="file", root=str(pathlib.Path.home())),
+                )
+            ]
+            + user_store
+            + [
+                (
+                    'scratch',
+                    'Scratch (temporary)',
+                    'scratch_store',
+                    dict(
+                        data_store_id="s3",
+                        root="agriculture-vlab-scratch/",
+                        max_depth=max_depth,
+                    ),
                 ),
-            ),
-            (
-                'test',
-                'AVL data (testing)',
-                'test_store',
-                dict(
-                    data_store_id="s3",
-                    root="agriculture-vlab-data-test/",
-                    max_depth=max_depth,
+                (
+                    'test',
+                    'AVL data (testing)',
+                    'test_store',
+                    dict(
+                        data_store_id="s3",
+                        root="agriculture-vlab-data-test/",
+                        max_depth=max_depth,
+                    ),
                 ),
-            ),
-            (
-                'staging',
-                'AVL data (staging)',
-                'staging_store',
-                dict(
-                    data_store_id="s3",
-                    root="agriculture-vlab-data-staging/",
-                    max_depth=max_depth,
+                (
+                    'staging',
+                    'AVL data (staging)',
+                    'staging_store',
+                    dict(
+                        data_store_id="s3",
+                        root="agriculture-vlab-data-staging/",
+                        max_depth=max_depth,
+                    ),
                 ),
-            ),
-            (
-                'data',
-                'AVL data',
-                'data_store',
-                dict(
-                    data_store_id="s3",
-                    root="agriculture-vlab-data/",
-                    max_depth=max_depth,
+                (
+                    'data',
+                    'AVL data',
+                    'data_store',
+                    dict(
+                        data_store_id="s3",
+                        root="agriculture-vlab-data/",
+                        max_depth=max_depth,
+                    ),
                 ),
-            ),
-            (
-                'public',
-                'User data (shared)',
-                'public_store_read',
-                dict(
-                    data_store_id="s3",
-                    root=f"agriculture-vlab-public/",
-                    max_depth=max_depth,
+                (
+                    'public',
+                    'User data (shared)',
+                    'public_store_read',
+                    dict(
+                        data_store_id="s3",
+                        root=f"agriculture-vlab-public/",
+                        max_depth=max_depth,
+                    ),
                 ),
-            ),
-        ]
+            ]
+        )
 
         return {args[0]: StoreRecord(*args) for args in store_definitions}
 
@@ -130,11 +145,15 @@ class Catalogue:
 
         with open(path / 'index.md', 'w') as fh:
             fh.write(f'# Data store: {store_id}\n\n')
+            empty = True
             for data_id in filter_ids(data_ids):
+                empty = False
                 fh.write(
                     f' - [{data_id}]({self.data_id_to_filename(data_id)})\n'
                 )
                 self.make_catalogue_for_dataset(store_id, data_id)
+            if empty:
+                fh.write('## There are no datasets available in this store.')
 
     def make_catalogue_for_dataset(self, store_id: str, data_id: str):
         basename = self.data_id_to_filename(data_id)
@@ -156,13 +175,15 @@ class Catalogue:
                 f".open_data('{data_id}')"
             )
             html_snippet = (
-                '&emsp;<button id="copybutton">⧉</button>'
-                '<script>copybutton.addEventListener('
-                '"pointerdown",'
-                f'() =\\> navigator.clipboard.writeText("{open_command}"))</script>'
+                '&emsp;<button id="copybutton"'
+                'title="Copy the code to the clipboard">⧉</button>'
+                '<script>copybutton.addEventListener("pointerdown",'
+                f'() =\\> navigator.clipboard.writeText("{open_command}"))'
+                '</script>'
             )
             fh.write(
-                f'## How to open this dataset in AVL JupyterLab {html_snippet}\n'
+                f'## How to open this dataset in AVL JupyterLab '
+                f'{html_snippet}\n'
                 f'```python\n{open_command}\n```\n\n'
             )
             if not hasattr(ds, 'attrs'):
@@ -284,29 +305,37 @@ class Catalogue:
         return '\n'.join(lines) + '\n\n'
 
     @staticmethod
-    def escape_for_markdown(content: Any) -> Any:
-        """Turn a string or list into a Markdown source string
+    def escape_for_markdown(content: Any) -> str:
+        """Turn any value into a Markdown source string
 
         For a string, characters which have special meaning in Markdown will
         be escaped to ensure that they display correctly. Additionally, if the
         string begins with "http://", "https://", or "www." it will be turned
         into a Markdown link.
 
-        For a list, each element will be processed recursively with another call
-        to this function, and they will be joined into a single string with ", "
-        as separator.
+        For a dictionary or list, each element will be processed recursively
+        with another call to this function, and they will be joined into a
+        single string with ", " and/or ": " as separators.
 
-        For any other type, the output is the same as the input.
+        Any other type will be turned into a string with the ``str`` function
+        and processed as a string.
 
         Args:
             content: anything
 
         Returns:
-            For strings and lists: Markdown source which will produce a
-            representation of the input. For any other type: the input value.
+            a correctly escaped Markdown representation of the input
         """
+
         if type(content) == list:
             return ', '.join(map(Catalogue.escape_for_markdown, content))
+        elif type(content) == dict:
+            return ', '.join(
+                Catalogue.escape_for_markdown(k)
+                + ': '
+                + Catalogue.escape_for_markdown(v)
+                for k, v in content.items()
+            )
         elif type(content) == str:
             escaped_text = re.sub(r'[][({`*_#+.!})\\-]', r'\\\g<0>', content)
             if re.match('https?://', content):
@@ -316,7 +345,7 @@ class Catalogue:
             else:
                 return escaped_text
         else:
-            return content
+            return Catalogue.escape_for_markdown(str(content))
 
     def make_map(self, props: Dict[str, Any], output_path: str) -> None:
         """Create a bounding box map from a dataset's properties
