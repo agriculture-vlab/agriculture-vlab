@@ -1,5 +1,4 @@
 import math
-import os
 import re
 import cartopy
 import cartopy.io.img_tiles
@@ -8,7 +7,6 @@ from matplotlib import pyplot as plt
 from typing import Any, Dict, Optional, List
 from xcube.core.store import new_data_store
 import pathlib
-import itertools
 
 
 class Catalogue:
@@ -17,13 +15,19 @@ class Catalogue:
         dest_dir: str,
         max_datasets: Optional[int] = None,
         use_stock_map: bool = False,
-        store_ids: Optional[List[str]] = None
+        store_ids: Optional[List[str]] = None,
+        data_suffixes: Optional[List[str]] = None,
     ):
         self.store_records = self.create_stores()
         self.dest_dir = pathlib.Path(dest_dir)
         self.max_datasets = max_datasets
         self.use_stock_map = use_stock_map
         self.store_ids = store_ids
+        self.data_suffixes = (
+            ('',)
+            if data_suffixes is None
+            else tuple(s.lower() for s in data_suffixes)
+        )
 
     @staticmethod
     def create_stores() -> Dict[str, 'StoreRecord']:
@@ -114,12 +118,19 @@ class Catalogue:
         path = self.dest_dir / store_id
         pathlib.Path.mkdir(path, parents=True, exist_ok=True)
         data_ids = self.store_records[store_id].store.get_data_ids()
-        data_ids_slice = data_ids if self.max_datasets is None else itertools.islice(
-                data_ids, 0, self.max_datasets
-            )
+
+        def filter_ids(ids):
+            count = 0
+            for id_ in ids:
+                if id_.lower().endswith(self.data_suffixes):
+                    yield id_
+                    count += 1
+                if count == self.max_datasets:
+                    return
+
         with open(path / 'index.md', 'w') as fh:
             fh.write(f'# Data store: {store_id}\n\n')
-            for data_id in data_ids_slice:  # TODO add parameter
+            for data_id in filter_ids(data_ids):
                 fh.write(
                     f' - [{data_id}]({self.data_id_to_filename(data_id)})\n'
                 )
@@ -140,12 +151,19 @@ class Catalogue:
             fh.write(f'*Dataset identifier:* {data_id}<br>\n')
             fh.write(f'*Data store:* {store_id}<br>\n')
             # TODO: link to open in viewer?
+            open_command = (
+                f"ds = {self.store_records[store_id].var_name}"
+                f".open_data('{data_id}')"
+            )
+            html_snippet = (
+                '&emsp;<button id="copybutton">⧉</button>'
+                '<script>copybutton.addEventListener('
+                '"pointerdown",'
+                f'() =\\> navigator.clipboard.writeText("{open_command}"))</script>'
+            )
             fh.write(
-                '## How to open this dataset in AVL JupyterLab\n'
-                '```python\n'
-                f'ds = {self.store_records[store_id].var_name}.'
-                f'open_data("{data_id}")\n'
-                '```\n\n'
+                f'## How to open this dataset in AVL JupyterLab {html_snippet}\n'
+                f'```python\n{open_command}\n```\n\n'
             )
             if not hasattr(ds, 'attrs'):
                 return
@@ -386,7 +404,9 @@ class Catalogue:
 class StoreRecord:
     """Creates and wraps a store with some catalogue-releant metadata"""
 
-    def __init__(self, store_id: str, desc: str, var_name: str, store_args: Dict):
+    def __init__(
+        self, store_id: str, desc: str, var_name: str, store_args: Dict
+    ):
         """Initialize a store record
 
         Args:
