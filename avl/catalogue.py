@@ -123,13 +123,23 @@ class Catalogue:
         pathlib.Path.mkdir(self.dest_dir, parents=True, exist_ok=True)
         index_path = self.dest_dir / 'index.md'
         with open(index_path, 'w') as fh:
-            fh.write('# Dataset catalogue\n\n## Stores\n\n')
+            fh.write(
+                '# AVL Dataset catalogue\n\n## Data stores\n\n'
+                'Click on a store name for more details.\n\n'
+                '| Store name | Description |\n'
+                '|------------|-------------|\n'
+            )
+
             for store_id in self.store_records:
                 if self.store_ids is None or store_id in self.store_ids:
-                    fh.write(f' - [{store_id}]({store_id}/index.md)\n')
-                    self.make_catalogue_for_store(store_id)
+                    fh.write(
+                        f'| [{store_id}]({store_id}/index.md) | '
+                        f'{self.store_records[store_id].desc} |\n'
+                    )
 
-    def make_catalogue_for_store(self, store_id: str):
+                    self.write_catalogue_for_store(store_id)
+
+    def write_catalogue_for_store(self, store_id: str):
         path = self.dest_dir / store_id
         pathlib.Path.mkdir(path, parents=True, exist_ok=True)
         data_ids = self.store_records[store_id].store.get_data_ids()
@@ -145,17 +155,25 @@ class Catalogue:
 
         with open(path / 'index.md', 'w') as fh:
             fh.write(f'# Data store: {store_id}\n\n')
+            var_name = self.store_records[store_id].var_name
+            fh.write(
+                f'## Store variable name in JupyterLab: `{var_name}` &emsp;'
+                f'{self._make_copy_button("variable name", var_name)}\n\n'
+            )
             empty = True
             for data_id in filter_ids(data_ids):
+                if empty:
+                    fh.write('## Datasets in this store\n\n')
+                    fh.write('Click on a dataset link for more details\n\n')
                 empty = False
                 fh.write(
-                    f' - [{data_id}]({self.data_id_to_filename(data_id)})\n'
+                    f'[{data_id}]({self.data_id_to_filename(data_id)})<br>\n'
                 )
-                self.make_catalogue_for_dataset(store_id, data_id)
+                self.write_catalogue_for_dataset(store_id, data_id)
             if empty:
                 fh.write('## There are no datasets available in this store.')
 
-    def make_catalogue_for_dataset(self, store_id: str, data_id: str):
+    def write_catalogue_for_dataset(self, store_id: str, data_id: str):
         basename = self.data_id_to_filename(data_id)
         path = self.dest_dir / store_id / basename
         with open(str(path) + '.md', 'w') as fh:
@@ -167,29 +185,23 @@ class Catalogue:
                 else data_id
             )
             fh.write(f'# Dataset: {title}\n\n')
-            fh.write(f'*Dataset identifier:* {data_id}<br>\n')
-            fh.write(f'*Data store:* {store_id}<br>\n')
+            fh.write(f'**Dataset identifier:** {data_id}<br>\n')
+            fh.write(f'**Data store:** {store_id}<br>\n')
             # TODO: link to open in viewer?
             open_command = (
                 f"ds = {self.store_records[store_id].var_name}"
                 f".open_data('{data_id}')"
             )
-            html_snippet = (
-                '&emsp;<button id="copybutton"'
-                'title="Copy the code to the clipboard">⧉</button>'
-                '<script>copybutton.addEventListener("pointerdown",'
-                f'() =\\> navigator.clipboard.writeText("{open_command}"))'
-                '</script>'
-            )
             fh.write(
                 f'## How to open this dataset in AVL JupyterLab '
-                f'{html_snippet}\n'
+                f'&emsp;{self._make_copy_button("code", open_command)}\n'
                 f'```python\n{open_command}\n```\n\n'
             )
             if not hasattr(ds, 'attrs'):
                 return
-            fh.write(f'![Bounding box map]({basename + ".png"})<br>\n')
             fh.write(
+                f'## Bounding box map\n\n'
+                f'![Bounding box map]({basename + ".png"})<br>\n'
                 '<span style="font-size: x-small">Map tiles by '
                 '<a href="http://stamen.com">Stamen Design</a>, under '
                 '<a href="http://creativecommons.org/licenses/by/3.0">'
@@ -200,7 +212,12 @@ class Catalogue:
                 'ODbL</a>.</span>\n\n'
             )
             self.make_map(ds.attrs, str(path) + '.png')
+            fh.write('## Basic information\n\n')
             fh.write(self.dataset_attrs_to_markdown(ds.attrs))
+            fh.write(
+                '## Variable list\n\nClick on a variable name to jump to the '
+                'variable’s full metadata.\n\n'
+            )
             fh.write(self.variables_to_markdown(ds.variables))
 
             fh.write('## Full variable metadata\n\n')
@@ -222,6 +239,17 @@ class Catalogue:
                 '## <a name="full-metadata"></a>Full dataset metadata\n\n'
             )
             fh.write(self.make_table(ds.attrs))
+
+    @staticmethod
+    def _make_copy_button(description, content):
+        html_snippet = (
+            '<button id="copybutton"'
+            f'title="Copy the {description} to the clipboard">⧉</button>'
+            '<script>copybutton.addEventListener("pointerdown",'
+            f'() =\\> navigator.clipboard.writeText("{content}"))'
+            '</script>'
+        )
+        return html_snippet
 
     @staticmethod
     def data_id_to_filename(data_id: str):
@@ -269,7 +297,7 @@ class Catalogue:
             Markdown source for a table summarizing the variables
 
         """
-        lines = ['| Variable | Identifier | Units |', '| ---- | ---- | ---- |']
+        lines = ['| Variable | Long name | Units |', '| ---- | ---- | ---- |']
         for varname, variable in variables.items():
             if varname == 'crs':
                 continue
@@ -279,7 +307,7 @@ class Catalogue:
             )
             name = self.escape_for_markdown(varname)
             units = self.escape_for_markdown(attrs.get('units', '[none]'))
-            lines.append(f'| [{long_name}](#{name}) | {name} | {units} |')
+            lines.append(f'| [{name}](#{name}) | {long_name} | {units} |')
         return '\n'.join(lines) + '\n\n'
 
     def make_table(self, data: Dict[str, Any], source_link: str = None) -> str:
