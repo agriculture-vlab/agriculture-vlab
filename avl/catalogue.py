@@ -1,13 +1,18 @@
 import math
 import re
 import os
+import shutil
+
 import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
-from matplotlib import pyplot as plt
-from typing import Any, Dict, Optional, List
+
+# from matplotlib import pyplot as plt
+from typing import Any, Dict, Optional, List, Tuple
 from xcube.core.store import new_data_store
 import pathlib
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
 class Catalogue:
@@ -29,6 +34,7 @@ class Catalogue:
             if data_suffixes is None
             else tuple(s.lower() for s in data_suffixes)
         )
+        self.map_manager = MapManager(image_dir=pathlib.Path(dest_dir, 'maps'), use_stock_map=use_stock_map)
 
     @staticmethod
     def create_stores() -> Dict[str, 'StoreRecord']:
@@ -57,7 +63,7 @@ class Catalogue:
             [
                 (
                     'lab',
-                    'Jupyter lab',
+                    'Jupyter Lab filesystem',
                     'lab_store',
                     dict(data_store_id="file", root=str(pathlib.Path.home())),
                 )
@@ -66,7 +72,7 @@ class Catalogue:
             + [
                 (
                     'scratch',
-                    'Scratch (temporary)',
+                    'Temporary data',
                     'scratch_store',
                     dict(
                         data_store_id="s3",
@@ -211,7 +217,15 @@ class Catalogue:
                 '<a href="http://www.openstreetmap.org/copyright">'
                 'ODbL</a>.</span>\n\n'
             )
-            self.make_map(ds.attrs, str(path) + '.png')
+            self.map_manager.write_map(
+                (
+                    ds.attrs.get('geospatial_lon_min', -180),
+                    ds.attrs.get('geospatial_lat_min', -90),
+                    ds.attrs.get('geospatial_lon_max', 180),
+                    ds.attrs.get('geospatial_lat_max', 90),
+                ),
+                self.dest_dir / store_id / (basename + '.png'),
+            )
             fh.write('## Basic information\n\n')
             fh.write(self.dataset_attrs_to_markdown(ds.attrs))
             fh.write(
@@ -375,21 +389,77 @@ class Catalogue:
         else:
             return Catalogue.escape_for_markdown(str(content))
 
-    def make_map(self, props: Dict[str, Any], output_path: str) -> None:
-        """Create a bounding box map from a dataset's properties
 
-        The map shows the dataset's bounding box at the centre of a map covering a
+class StoreRecord:
+    """Creates and wraps a store with some catalogue-releant metadata"""
+
+    def __init__(
+        self, store_id: str, desc: str, var_name: str, store_args: Dict
+    ):
+        """Initialize a store record
+
+        Args:
+            store_id: store identifier to use in the catalogue
+            desc: human-readable description of the store
+            var_name: name of pre-initialized store variable in JupyterLab
+            store_args: passed directly to `new_data_store`
+        """
+
+        self.store_id = store_id
+        self.desc = desc
+        self.var_name = var_name
+        self.store_args = store_args
+        self.store = new_data_store(**store_args)
+
+
+class MapManager:
+    """Creates and manages map images, re-using them where possible
+
+    Creating a bounding box map is slow and many datasets have identical
+    bounding boxes, so this class is used to make sure that identical bounding
+    box maps are not re-rendered unnecessarily.
+    """
+
+    def __init__(self, image_dir: pathlib.Path, use_stock_map: bool = False):
+        # TODO create a temporary directory if image directory not specified
+        self.image_dir: pathlib.Path = image_dir
+        self.use_stock_map = use_stock_map
+        image_dir.mkdir(parents=True, exist_ok=True)
+
+    def write_map(
+        self,
+        bbox: Tuple[float, float, float, float],
+        destination: pathlib.Path
+    ) -> None:
+        """Return a path to a map representing a specified bounding box
+
+        The map will be created if necessary.
+
+        Args:
+            bbox: a bounding box in WGS84 degrees
+            destination: path to which to write the map
+        """
+
+        basename = '_'.join(map(lambda x: f'{x:.4f}', bbox)) + '.png'
+        path = self.image_dir / basename
+        if not path.exists():
+            self.make_map(bbox, path.as_posix())
+        shutil.copy2(path, destination)
+
+    def make_map(
+        self, bbox: Tuple[float, float, float, float], output_path: str
+    ) -> None:
+        """Create a bounding box map
+
+        The map shows the bounding box at the centre of a map covering a
         larger area.
 
         Args:
-            props: property dictionary for a dataset
+            bbox: bounding box to represent
             output_path: the path to which to write the map. The output format
                 is determined by the file extension of this path.
         """
-        x0 = props.get('geospatial_lon_min', -180)
-        x1 = props.get('geospatial_lon_max', 180)
-        y0 = props.get('geospatial_lat_min', -90)
-        y1 = props.get('geospatial_lat_max', 90)
+        x0, y0, x1, y1 = bbox
         w = x1 - x0
         h = y1 - y0
 
@@ -397,9 +467,10 @@ class Catalogue:
         # a global Mollweide projection.
         large = w > 45 or h > 45
 
-        margin_factor = 0.2  # how much margin to include around the bbox
+        margin_factor = 0.4  # how much margin to include around the bbox
         image_tiles = cartopy.io.img_tiles.Stamen('terrain-background')
-        plt.figure()
+        fig = Figure()
+        FigureCanvas(fig)
         projection = (
             cartopy.crs.Mollweide(central_longitude=(x0 + x1) / 2)
             if large
@@ -409,7 +480,7 @@ class Catalogue:
                 # centre the projection over our bbox
             )
         )
-        ax = plt.axes(projection=projection)
+        ax = fig.add_subplot(111, projection=projection)
         if large:
             ax.set_global()
         else:
@@ -453,28 +524,6 @@ class Catalogue:
         )
         ax.add_patch(bbox_path_patch)
         ax.gridlines(draw_labels=not large, color='white')
-        plt.tight_layout(pad=0)
-        plt.savefig(output_path, bbox_inches='tight', pad_inches=0.1)
-        # plt.close()  # TODO fix this
-
-
-class StoreRecord:
-    """Creates and wraps a store with some catalogue-releant metadata"""
-
-    def __init__(
-        self, store_id: str, desc: str, var_name: str, store_args: Dict
-    ):
-        """Initialize a store record
-
-        Args:
-            store_id: store identifier to use in the catalogue
-            desc: human-readable description of the store
-            var_name: name of pre-initialized store variable in JupyterLab
-            store_args: passed directly to `new_data_store`
-        """
-
-        self.store_id = store_id
-        self.desc = desc
-        self.var_name = var_name
-        self.store_args = store_args
-        self.store = new_data_store(**store_args)
+        fig.tight_layout(pad=0)
+        print('*' + output_path)
+        fig.savefig(output_path, bbox_inches='tight', pad_inches=0.1)
