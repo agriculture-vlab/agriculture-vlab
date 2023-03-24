@@ -34,7 +34,10 @@ class Catalogue:
             if data_suffixes is None
             else tuple(s.lower() for s in data_suffixes)
         )
-        self.map_manager = MapManager(image_dir=pathlib.Path(dest_dir, 'maps'), use_stock_map=use_stock_map)
+        self.map_manager = MapManager(
+            image_dir=pathlib.Path(dest_dir, 'maps'),
+            use_stock_map=use_stock_map,
+        )
 
     @staticmethod
     def create_stores() -> Dict[str, 'StoreRecord']:
@@ -170,7 +173,7 @@ class Catalogue:
             for data_id in filter_ids(data_ids):
                 if empty:
                     fh.write('## Datasets in this store\n\n')
-                    fh.write('Click on a dataset link for more details\n\n')
+                    fh.write('Click on a dataset link for more details.\n\n')
                 empty = False
                 fh.write(
                     f'[{data_id}]({self.data_id_to_filename(data_id)})<br>\n'
@@ -184,10 +187,10 @@ class Catalogue:
         path = self.dest_dir / store_id / basename
         with open(str(path) + '.md', 'w') as fh:
             print(store_id, data_id)
-            ds = self.store_records[store_id].store.open_data(data_id)
+            desc = self.store_records[store_id].store.describe_data(data_id)
             title = (
-                ds.attrs.get('title', data_id)
-                if hasattr(ds, 'attrs')
+                desc.attrs.get('title', data_id)
+                if hasattr(desc, 'attrs')
                 else data_id
             )
             fh.write(f'# Dataset: {title}\n\n')
@@ -203,56 +206,65 @@ class Catalogue:
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
                 f'```python\n{open_command}\n```\n\n'
             )
-            if not hasattr(ds, 'attrs'):
+            if not (hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)):
                 return
-            fh.write(
-                f'## Bounding box map\n\n'
-                f'![Bounding box map]({basename + ".png"})<br>\n'
-                '<span style="font-size: x-small">Map tiles by '
-                '<a href="http://stamen.com">Stamen Design</a>, under '
-                '<a href="http://creativecommons.org/licenses/by/3.0">'
-                'CC BY 3.0</a>. Data by '
-                '<a href="http://openstreetmap.org">OpenStreetMap</a>,'
-                ' under '
-                '<a href="http://www.openstreetmap.org/copyright">'
-                'ODbL</a>.</span>\n\n'
+            bbox = (
+                desc.bbox
+                if hasattr(desc, 'bbox')
+                else (
+                    desc.attrs.get('geospatial_lon_min', -180),
+                    desc.attrs.get('geospatial_lat_min', -90),
+                    desc.attrs.get('geospatial_lon_max', 180),
+                    desc.attrs.get('geospatial_lat_max', 90),
+                )
             )
-            self.map_manager.write_map(
-                (
-                    ds.attrs.get('geospatial_lon_min', -180),
-                    ds.attrs.get('geospatial_lat_min', -90),
-                    ds.attrs.get('geospatial_lon_max', 180),
-                    ds.attrs.get('geospatial_lat_max', 90),
-                ),
-                self.dest_dir / store_id / (basename + '.png'),
-            )
+            if self._is_bbox_valid(bbox):
+                self.map_manager.write_map(
+                    bbox, self.dest_dir / store_id / (basename + '.png')
+                )
+                fh.write(
+                    f'## Bounding box map\n\n'
+                    f'![Bounding box map]({basename + ".png"})<br>\n'
+                    '<span style="font-size: x-small">Map tiles by '
+                    '<a href="http://stamen.com">Stamen Design</a>, under '
+                    '<a href="http://creativecommons.org/licenses/by/3.0">'
+                    'CC BY 3.0</a>. Data by '
+                    '<a href="http://openstreetmap.org">OpenStreetMap</a>,'
+                    ' under '
+                    '<a href="http://www.openstreetmap.org/copyright">'
+                    'ODbL</a>.</span>\n\n'
+                )
             fh.write('## Basic information\n\n')
-            fh.write(self.dataset_attrs_to_markdown(ds.attrs))
+            fh.write(self.dataset_attrs_to_markdown(desc.attrs))
             fh.write(
                 '## Variable list\n\nClick on a variable name to jump to the '
                 'variable’s full metadata.\n\n'
             )
-            fh.write(self.variables_to_markdown(ds.variables))
+            fh.write(self.variables_to_markdown(desc.data_vars))
 
             fh.write('## Full variable metadata\n\n')
-            for var_name, variable in ds.variables.items():
+            for var_name, variable in desc.data_vars.items():
                 variable_source_filename = basename + '-' + var_name + '.md'
                 variable_source_path = (
                     self.dest_dir / store_id / variable_source_filename
                 )
                 fh.write(f'### <a name="{var_name}"></a>' f'{var_name}\n\n')
-                fh.write(
-                    self.make_table(
-                        variable.attrs, source_link=variable_source_filename
+                if hasattr(variable, 'attrs') and isinstance(
+                    variable.attrs, dict
+                ):
+                    fh.write(
+                        self.make_table(
+                            variable.attrs,
+                            source_link=variable_source_filename,
+                        )
                     )
-                )
-                if 'source' in variable.attrs:
-                    with open(variable_source_path, 'w') as var_source_fh:
-                        var_source_fh.write(f'`{variable["source"]}`\n')
+                    if 'source' in variable.attrs:
+                        with open(variable_source_path, 'w') as var_source_fh:
+                            var_source_fh.write(f'`{variable["source"]}`\n')
             fh.write(
                 '## <a name="full-metadata"></a>Full dataset metadata\n\n'
             )
-            fh.write(self.make_table(ds.attrs))
+            fh.write(self.make_table(desc.attrs))
 
     @staticmethod
     def _make_copy_button(description, content):
@@ -264,6 +276,31 @@ class Catalogue:
             '</script>'
         )
         return html_snippet
+
+    @staticmethod
+    def _is_bbox_valid(bbox: Tuple[float, float, float, float]) -> bool:
+        """
+        Checks whether an object is a valid representation of a bounding
+        box in degrees. This should catch cases where a bbox is given in
+        an undeclared non-WGS84 CRS.
+
+        Args:
+            bbox: a bounding box
+
+        Returns: True if and only if the bbox is a 4-tuple of valid longitude
+        and latitude values in degrees
+        """
+
+        if not isinstance(bbox, tuple):
+            return False
+        if len(bbox) != 4:
+            return False
+        return (
+            -180 <= bbox[0] <= 180
+            and -90 <= bbox[1] <= 90
+            and -180 <= bbox[2] <= 180
+            and -90 <= bbox[3] <= 90
+        )
 
     @staticmethod
     def data_id_to_filename(data_id: str):
@@ -279,6 +316,8 @@ class Catalogue:
         Returns:
             Markdown source containing information about the dataset
         """
+
+        # TODO: take a DatasetDescriptor param rather than attrs
 
         def prop(key):
             return props.get(key, "?")
@@ -315,7 +354,12 @@ class Catalogue:
         for varname, variable in variables.items():
             if varname == 'crs':
                 continue
-            attrs = variable.attrs
+            attrs = (
+                variable.attrs
+                if hasattr(variable, 'attrs')
+                and isinstance(variable.attrs, dict)
+                else {}
+            )
             long_name = self.escape_for_markdown(
                 attrs.get('long_name', '[none]')
             )
@@ -379,7 +423,16 @@ class Catalogue:
                 for k, v in content.items()
             )
         elif type(content) == str:
-            escaped_text = re.sub(r'[][({`*_#+.!})\\-]', r'\\\g<0>', content)
+            # TODO escape < and > !
+            escaped_text = (
+                re.sub(
+                    r'\n+',
+                    r' ',
+                    re.sub(r'[][({`*_#+.!})\\-]', r'\\\g<0>', content),
+                )
+                .replace('<', '&lt;')
+                .replace('>', '&gt;')
+            )
             if re.match('https?://', content):
                 return f'[{escaped_text}]({content})'
             elif re.match('www[.]', content):
@@ -429,7 +482,7 @@ class MapManager:
     def write_map(
         self,
         bbox: Tuple[float, float, float, float],
-        destination: pathlib.Path
+        destination: pathlib.Path,
     ) -> None:
         """Return a path to a map representing a specified bounding box
 
