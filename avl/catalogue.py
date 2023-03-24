@@ -123,6 +123,36 @@ class Catalogue:
                         max_depth=max_depth,
                     ),
                 ),
+                (
+                    'cds',
+                    'Copernicus Climate Data Store data',
+                    'fixme',
+                    dict(data_store_id='cds')
+                ),
+                (
+                    'cciodp',
+                    'ESA Climate Change Initiative data (ODP format)',
+                    'fixme',
+                    dict(data_store_id='cciodp')
+                ),
+                (
+                    'ccizarr',
+                    'ESA Climate Change Initiative data (Zarr format)',
+                    'fixme',
+                    dict(data_store_id='ccizarr')
+                ),
+                (
+                    'cmems',
+                    'Copernicus Marine Environment Monitoring Service',
+                    'fixme',
+                    dict(data_store_id='cmems')
+                ),
+                # (
+                #     'sentinelhub',
+                #     'SentinelHub',
+                #     'fixme',
+                #     dict(data_store_id='sentinelhub')
+                # ),
             ]
         )
 
@@ -190,7 +220,7 @@ class Catalogue:
             desc = self.store_records[store_id].store.describe_data(data_id)
             title = (
                 desc.attrs.get('title', data_id)
-                if hasattr(desc, 'attrs')
+                if hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)
                 else data_id
             )
             fh.write(f'# Dataset: {title}\n\n')
@@ -206,18 +236,20 @@ class Catalogue:
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
                 f'```python\n{open_command}\n```\n\n'
             )
-            if not (hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)):
-                return
-            bbox = (
-                desc.bbox
-                if hasattr(desc, 'bbox')
-                else (
+            valid_attrs = (hasattr(desc, 'attrs') and isinstance(desc.attrs, dict))
+
+            if hasattr(desc, 'bbox'):
+                bbox = desc.bbox
+            elif valid_attrs:
+                bbox = (
                     desc.attrs.get('geospatial_lon_min', -180),
                     desc.attrs.get('geospatial_lat_min', -90),
                     desc.attrs.get('geospatial_lon_max', 180),
                     desc.attrs.get('geospatial_lat_max', 90),
                 )
-            )
+            else:
+                bbox = (-180, -90, 180, 90)
+
             if self._is_bbox_valid(bbox):
                 self.map_manager.write_map(
                     bbox, self.dest_dir / store_id / (basename + '.png')
@@ -234,8 +266,9 @@ class Catalogue:
                     '<a href="http://www.openstreetmap.org/copyright">'
                     'ODbL</a>.</span>\n\n'
                 )
-            fh.write('## Basic information\n\n')
-            fh.write(self.dataset_attrs_to_markdown(desc.attrs))
+            if valid_attrs:
+                fh.write('## Basic information\n\n')
+                fh.write(self.dataset_attrs_to_markdown(desc.attrs))
             fh.write(
                 '## Variable list\n\nClick on a variable name to jump to the '
                 'variable’s full metadata.\n\n'
@@ -261,10 +294,11 @@ class Catalogue:
                     if 'source' in variable.attrs:
                         with open(variable_source_path, 'w') as var_source_fh:
                             var_source_fh.write(f'`{variable["source"]}`\n')
-            fh.write(
-                '## <a name="full-metadata"></a>Full dataset metadata\n\n'
-            )
-            fh.write(self.make_table(desc.attrs))
+            if valid_attrs:
+                fh.write(
+                    '## <a name="full-metadata"></a>Full dataset metadata\n\n'
+                )
+                fh.write(self.make_table(desc.attrs))
 
     @staticmethod
     def _make_copy_button(description, content):
@@ -304,7 +338,7 @@ class Catalogue:
 
     @staticmethod
     def data_id_to_filename(data_id: str):
-        return data_id.replace('/', '-').replace('.', '-')
+        return re.sub('[/.:]', '-', data_id)
 
     @staticmethod
     def dataset_attrs_to_markdown(props: Dict[str, Any]) -> str:
