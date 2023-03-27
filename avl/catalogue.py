@@ -8,8 +8,8 @@ import cartopy.io.img_tiles
 import matplotlib.patches as patches
 
 # from matplotlib import pyplot as plt
-from typing import Any, Dict, Optional, List, Tuple
-from xcube.core.store import new_data_store
+from typing import Any, Dict, Optional, List, Tuple, cast
+from xcube.core.store import new_data_store, DatasetDescriptor
 import pathlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -127,32 +127,32 @@ class Catalogue:
                     'cds',
                     'Copernicus Climate Data Store data',
                     'fixme',
-                    dict(data_store_id='cds')
+                    dict(data_store_id='cds'),
                 ),
                 (
                     'cciodp',
                     'ESA Climate Change Initiative data (ODP format)',
                     'fixme',
-                    dict(data_store_id='cciodp')
+                    dict(data_store_id='cciodp'),
                 ),
                 (
                     'ccizarr',
                     'ESA Climate Change Initiative data (Zarr format)',
                     'fixme',
-                    dict(data_store_id='ccizarr')
+                    dict(data_store_id='ccizarr'),
                 ),
                 (
                     'cmems',
                     'Copernicus Marine Environment Monitoring Service',
                     'fixme',
-                    dict(data_store_id='cmems')
+                    dict(data_store_id='cmems'),
                 ),
-                # (
-                #     'sentinelhub',
-                #     'SentinelHub',
-                #     'fixme',
-                #     dict(data_store_id='sentinelhub')
-                # ),
+                (
+                    'sentinelhub',
+                    'SentinelHub',
+                    'fixme',
+                    dict(data_store_id='sentinelhub'),
+                ),
             ]
         )
 
@@ -218,6 +218,8 @@ class Catalogue:
         with open(str(path) + '.md', 'w') as fh:
             print(store_id, data_id)
             desc = self.store_records[store_id].store.describe_data(data_id)
+            assert isinstance(desc, DatasetDescriptor)
+            desc = cast(DatasetDescriptor, desc)
             title = (
                 desc.attrs.get('title', data_id)
                 if hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)
@@ -236,9 +238,11 @@ class Catalogue:
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
                 f'```python\n{open_command}\n```\n\n'
             )
-            valid_attrs = (hasattr(desc, 'attrs') and isinstance(desc.attrs, dict))
+            valid_attrs = hasattr(desc, 'attrs') and isinstance(
+                desc.attrs, dict
+            )
 
-            if hasattr(desc, 'bbox'):
+            if hasattr(desc, 'bbox') and desc.bbox is not None:
                 bbox = desc.bbox
             elif valid_attrs:
                 bbox = (
@@ -268,7 +272,7 @@ class Catalogue:
                 )
             if valid_attrs:
                 fh.write('## Basic information\n\n')
-                fh.write(self.dataset_attrs_to_markdown(desc.attrs))
+                fh.write(self.dataset_desc_to_markdown(desc, bbox))
             fh.write(
                 '## Variable list\n\nClick on a variable name to jump to the '
                 'variable’s full metadata.\n\n'
@@ -277,23 +281,11 @@ class Catalogue:
 
             fh.write('## Full variable metadata\n\n')
             for var_name, variable in desc.data_vars.items():
-                variable_source_filename = basename + '-' + var_name + '.md'
-                variable_source_path = (
-                    self.dest_dir / store_id / variable_source_filename
-                )
                 fh.write(f'### <a name="{var_name}"></a>' f'{var_name}\n\n')
                 if hasattr(variable, 'attrs') and isinstance(
                     variable.attrs, dict
                 ):
-                    fh.write(
-                        self.make_table(
-                            variable.attrs,
-                            source_link=variable_source_filename,
-                        )
-                    )
-                    if 'source' in variable.attrs:
-                        with open(variable_source_path, 'w') as var_source_fh:
-                            var_source_fh.write(f'`{variable["source"]}`\n')
+                    fh.write(self.make_table(variable.attrs))
             if valid_attrs:
                 fh.write(
                     '## <a name="full-metadata"></a>Full dataset metadata\n\n'
@@ -341,36 +333,44 @@ class Catalogue:
         return re.sub('[/.:]', '-', data_id)
 
     @staticmethod
-    def dataset_attrs_to_markdown(props: Dict[str, Any]) -> str:
-        """Create a brief summary from a dictionary of dataset properties.
+    def dataset_desc_to_markdown(
+        desc: DatasetDescriptor, bbox: Tuple[float, float, float, float]
+    ) -> str:
+        """Create a brief summary from a dataset description and bounding box
 
         Args:
-            props: dictionary of dataset properties
+            desc: dataset descriptor
+            bbox: bounding box
 
         Returns:
             Markdown source containing information about the dataset
         """
 
-        # TODO: take a DatasetDescriptor param rather than attrs
-
-        def prop(key):
-            return props.get(key, "?")
+        def row_if_attr(title, keys: list):
+            # Return table row only if one of the keys is present in attrs.
+            for key in keys:
+                if key in desc.attrs:
+                    return f'| {title} | {desc.attrs[key]} |\n'
+            return ''
 
         return (
             f'| Parameter | Value |\n'
             f'| ---- | ---- |\n'
-            f'| Bounding box latitude | {prop("geospatial_lat_min")} to '
-            f'{prop("geospatial_lat_max")} |\n'
-            f'| Bounding box longitude | {prop("geospatial_lon_min")} to '
-            f'{prop("geospatial_lon_max")} |\n'
-            f'| Time range | {prop("time_coverage_start")} to '
-            f'{prop("time_coverage_end")} |\n'
+            f'| Bounding box longitude (°) | {bbox[0]} to {bbox[2]} |\n'
+            f'| Bounding box latitude (°) | {bbox[1]} to {bbox[3]} |\n'
             + (
-                f'| Time period | {prop("time_period")} |\n'
-                if 'time_period' in props
+                f'| Time range | {desc.time_range[0]} to '
+                f'{desc.time_range[1] or "present"} |\n'
+                if desc.time_range
                 else ''
             )
-            + f'| Publisher | {prop("publisher_name")} |\n\n'
+            + (
+                f'| Time period | {desc.time_period} |\n'
+                if desc.time_period
+                else ''
+            )
+            + row_if_attr('Publisher', ['publisher', 'publisher_name'])
+            + f'\n'
             '[Click here for full dataset metadata.](#full-metadata)\n\n'
         )
 
@@ -457,7 +457,6 @@ class Catalogue:
                 for k, v in content.items()
             )
         elif type(content) == str:
-            # TODO escape < and > !
             escaped_text = (
                 re.sub(
                     r'\n+',
