@@ -126,31 +126,31 @@ class Catalogue:
                 (
                     'cds',
                     'Copernicus Climate Data Store data',
-                    'fixme',
+                    None,
                     dict(data_store_id='cds'),
                 ),
                 (
                     'cciodp',
                     'ESA Climate Change Initiative data (ODP format)',
-                    'fixme',
+                    None,
                     dict(data_store_id='cciodp'),
                 ),
                 (
                     'ccizarr',
                     'ESA Climate Change Initiative data (Zarr format)',
-                    'fixme',
+                    None,
                     dict(data_store_id='ccizarr'),
                 ),
                 (
                     'cmems',
                     'Copernicus Marine Environment Monitoring Service',
-                    'fixme',
+                    None,
                     dict(data_store_id='cmems'),
                 ),
                 (
                     'sentinelhub',
                     'SentinelHub',
-                    'fixme',
+                    None,
                     dict(data_store_id='sentinelhub'),
                 ),
             ]
@@ -229,10 +229,8 @@ class Catalogue:
             fh.write(f'**Dataset identifier:** {data_id}<br>\n')
             fh.write(f'**Data store:** {store_id}<br>\n')
             # TODO: link to open in viewer?
-            open_command = (
-                f"ds = {self.store_records[store_id].var_name}"
-                f".open_data('{data_id}')"
-            )
+            open_command = \
+                self.store_records[store_id].get_code_snippet(data_id)
             fh.write(
                 f'## How to open this dataset in AVL JupyterLab '
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
@@ -277,7 +275,8 @@ class Catalogue:
                 '## Variable list\n\nClick on a variable name to jump to the '
                 'variable’s full metadata.\n\n'
             )
-            fh.write(self.variables_to_markdown(desc.data_vars))
+            if isinstance(desc.data_vars, dict):
+                fh.write(self.variables_to_markdown(desc.data_vars))
 
             fh.write('## Full variable metadata\n\n')
             for var_name, variable in desc.data_vars.items():
@@ -384,6 +383,7 @@ class Catalogue:
             Markdown source for a table summarizing the variables
 
         """
+        assert(variables is not None)
         lines = ['| Variable | Long name | Units |', '| ---- | ---- | ---- |']
         for varname, variable in variables.items():
             if varname == 'crs':
@@ -496,6 +496,34 @@ class StoreRecord:
         self.var_name = var_name
         self.store_args = store_args
         self.store = new_data_store(**store_args)
+
+    def _make_param_template(self, schema):
+        snippet = ''
+        for param in schema.required:
+            snippet += ', '
+            snippet += f'{param}='
+            param_type = schema.properties[param].type
+            if param_type == 'array' or 'array' in param_type:
+                snippet += '[?]'
+            else:
+                snippet += '?'
+        return snippet
+
+    def get_code_snippet(self, data_id):
+        snippet = ''
+        if self.var_name is None:
+            var_name = f"{self.store_id}_store"
+            store_schema = self.store.get_data_store_params_schema()
+            snippet = (
+                f"{var_name} = new_data_store("
+                f"'{self.store_id + self._make_param_template(store_schema)}'"
+                f")\n"
+            )
+        else:
+            var_name = self.var_name
+        ds_schema = self.store.get_open_data_params_schema(data_id=data_id)
+        snippet += f"ds = {var_name}.open_data('{data_id + self._make_param_template(ds_schema)}')"
+        return snippet
 
 
 class MapManager:
