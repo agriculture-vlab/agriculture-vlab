@@ -2,6 +2,7 @@ import math
 import re
 import os
 import shutil
+from functools import cached_property
 
 import cartopy
 import cartopy.io.img_tiles
@@ -229,8 +230,9 @@ class Catalogue:
             fh.write(f'**Dataset identifier:** {data_id}<br>\n')
             fh.write(f'**Data store:** {store_id}<br>\n')
             # TODO: link to open in viewer?
-            open_command = \
-                self.store_records[store_id].get_code_snippet(data_id)
+            open_command = self.store_records[store_id].get_code_snippet(
+                data_id
+            )
             fh.write(
                 f'## How to open this dataset in AVL JupyterLab '
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
@@ -383,7 +385,7 @@ class Catalogue:
             Markdown source for a table summarizing the variables
 
         """
-        assert(variables is not None)
+        assert variables is not None
         lines = ['| Variable | Long name | Units |', '| ---- | ---- | ---- |']
         for varname, variable in variables.items():
             if varname == 'crs':
@@ -477,7 +479,7 @@ class Catalogue:
 
 
 class StoreRecord:
-    """Creates and wraps a store with some catalogue-releant metadata"""
+    """Creates and wraps a store with some catalogue-relevant metadata"""
 
     def __init__(
         self, store_id: str, desc: str, var_name: str, store_args: Dict
@@ -495,9 +497,13 @@ class StoreRecord:
         self.desc = desc
         self.var_name = var_name
         self.store_args = store_args
-        self.store = new_data_store(**store_args)
 
-    def _make_param_template(self, schema):
+    @cached_property
+    def store(self):
+        return new_data_store(**self.store_args)
+
+    @staticmethod
+    def _make_param_template(schema):
         snippet = ''
         for param in schema.required:
             snippet += ', '
@@ -522,7 +528,10 @@ class StoreRecord:
         else:
             var_name = self.var_name
         ds_schema = self.store.get_open_data_params_schema(data_id=data_id)
-        snippet += f"ds = {var_name}.open_data('{data_id + self._make_param_template(ds_schema)}')"
+        snippet += (
+            f"ds = {var_name}.open_data("
+            f"'{data_id + self._make_param_template(ds_schema)}')"
+        )
         return snippet
 
 
