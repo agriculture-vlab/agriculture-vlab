@@ -183,11 +183,14 @@ class Catalogue:
         path = self.dest_dir / store_id
         pathlib.Path.mkdir(path, parents=True, exist_ok=True)
         data_ids = self.store_records[store_id].store.get_data_ids()
+        data_store_id = \
+            self.store_records[store_id].store_args['data_store_id']
 
         def filter_ids(ids):
             count = 0
             for id_ in ids:
-                if id_.lower().endswith(self.data_suffixes):
+                if (id_.lower().endswith(self.data_suffixes)
+                        or data_store_id not in ['s3', 'file']):
                     yield id_
                     count += 1
                 if count == self.max_datasets:
