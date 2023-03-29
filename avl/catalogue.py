@@ -2,7 +2,7 @@ import math
 import re
 import os
 import shutil
-from functools import cached_property
+from functools import cached_property, partial
 
 import cartopy
 import cartopy.io.img_tiles
@@ -563,6 +563,10 @@ class MapManager:
             destination: path to which to write the map
         """
 
+        # Round bbox values to 4 d.p., which is sufficient precision,
+        # keeps the filename length reasonable, and allows reuse of
+        # identical-looking bbox maps even if the actual values are not
+        # identical.
         basename = '_'.join(map(lambda x: f'{x:.4f}', bbox)) + '.png'
         path = self.image_dir / basename
         if not path.exists():
@@ -582,7 +586,12 @@ class MapManager:
             output_path: the path to which to write the map. The output format
                 is determined by the file extension of this path.
         """
-        x0, y0, x1, y1 = bbox
+
+        # We round bounding box values because it sometimes breaks for
+        # very-nearly-round values, e.g. (-180, -60, 179.99999999, 80.0).
+        # 4 d.p. corresponds to ~10m resolution, which should be enough
+        # for any of our datasets.
+        x0, y0, x1, y1 = tuple(map(partial(round, ndigits=4), bbox))
         w = x1 - x0
         h = y1 - y0
 
@@ -624,8 +633,10 @@ class MapManager:
         if max_dim_deg > 45:
             max_dim_deg = 360
         zoom_level = 3 + int(math.log2(360 / max_dim_deg))
-        if self.use_stock_map:
-            ax.stock_img()  # very low-res but very fast, so useful for testing
+        if self.use_stock_map or large:
+            # Stock imagery is low-res but fast, so we use it for large areas
+            # or when explicitly requested.
+            ax.stock_img()
         else:
             ax.add_image(image_tiles, zoom_level)
 
