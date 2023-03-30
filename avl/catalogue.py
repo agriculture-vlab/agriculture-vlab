@@ -8,12 +8,16 @@ import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
 
-# from matplotlib import pyplot as plt
 from typing import Any, Dict, Optional, List, Tuple, cast
 from xcube.core.store import new_data_store, DatasetDescriptor
 import pathlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+
+
+def _retry_failed(retry_state):
+    print(f'Too many retries. {retry_state}')
 
 
 class Catalogue:
@@ -132,7 +136,7 @@ class Catalogue:
                 ),
                 (
                     'cciodp',
-                    'ESA Climate Change Initiative data (ODP format)',
+                    'ESA Climate Change Initiative data (from ODP)',
                     None,
                     dict(data_store_id='cciodp'),
                 ),
@@ -216,6 +220,9 @@ class Catalogue:
             if empty:
                 fh.write('## There are no datasets available in this store.')
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_exponential(multiplier=1, min=10, max=120),
+           retry_error_callback=_retry_failed)
     def write_catalogue_for_dataset(self, store_id: str, data_id: str):
         basename = self.data_id_to_filename(data_id)
         path = self.dest_dir / store_id / basename
@@ -282,14 +289,14 @@ class Catalogue:
             )
             if isinstance(desc.data_vars, dict):
                 fh.write(self.variables_to_markdown(desc.data_vars))
+                fh.write('## Full variable metadata\n\n')
+                for var_name, variable in desc.data_vars.items():
+                    fh.write(f'### <a name="{var_name}"></a>{var_name}\n\n')
+                    if hasattr(variable, 'attrs') and isinstance(
+                        variable.attrs, dict
+                    ):
+                        fh.write(self.make_table(variable.attrs))
 
-            fh.write('## Full variable metadata\n\n')
-            for var_name, variable in desc.data_vars.items():
-                fh.write(f'### <a name="{var_name}"></a>' f'{var_name}\n\n')
-                if hasattr(variable, 'attrs') and isinstance(
-                    variable.attrs, dict
-                ):
-                    fh.write(self.make_table(variable.attrs))
             if valid_attrs:
                 fh.write(
                     '## <a name="full-metadata"></a>Full dataset metadata\n\n'
@@ -603,7 +610,8 @@ class MapManager:
         large = w > 45 or h > 45
 
         margin_factor = 0.4  # how much margin to include around the bbox
-        image_tiles = cartopy.io.img_tiles.Stamen('terrain-background')
+        # image_tiles = cartopy.io.img_tiles.Stamen('terrain-background')
+        image_tiles = cartopy.io.img_tiles.OSM()
         fig = Figure()
         FigureCanvas(fig)
         projection = (
@@ -635,7 +643,7 @@ class MapManager:
         max_dim_deg = max(w, h)
         if max_dim_deg > 45:
             max_dim_deg = 360
-        zoom_level = 3 + int(math.log2(360 / max_dim_deg))
+        zoom_level = max(12, 3 + int(math.log2(360 / max_dim_deg)))
         if self.use_stock_map or large:
             # Stock imagery is low-res but fast, so we use it for large areas
             # or when explicitly requested.
