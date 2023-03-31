@@ -1,23 +1,51 @@
 import math
-import re
 import os
+import pathlib
+import queue
+import re
 import shutil
 from functools import cached_property, partial
+from typing import Any, Dict, Optional, List, Tuple, cast
+import multiprocessing
 
 import cartopy
 import cartopy.io.img_tiles
 import matplotlib.patches as patches
-
-from typing import Any, Dict, Optional, List, Tuple, cast
-from xcube.core.store import new_data_store, DatasetDescriptor
-import pathlib
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential
+from xcube.core.store import new_data_store, DatasetDescriptor
 
 
 def _retry_failed(retry_state):
     print(f'Too many retries. {retry_state}')
+
+
+def _get_desc_with_timeout(store, data_id) -> Optional[DatasetDescriptor]:
+    wait_interval = 0.5  # seconds
+    number_of_waits = 120
+    result_queue = multiprocessing.Queue()
+
+    def get_desc():
+        result_queue.put(store.describe_data(data_id))
+
+    p = multiprocessing.Process(target=get_desc)
+    p.start()
+    for i in range(number_of_waits):
+        p.join(wait_interval)
+        if not p.is_alive():
+            break
+
+    if p.is_alive():
+        print(f'{data_id} timed out after {wait_interval * number_of_waits} '
+              f'seconds.')
+        p.terminate()
+        p.join()
+
+    try:
+        return result_queue.get(block=True, timeout=wait_interval)
+    except queue.Empty:
+        return None
 
 
 class Catalogue:
@@ -28,6 +56,7 @@ class Catalogue:
         use_stock_map: bool = False,
         store_ids: Optional[List[str]] = None,
         data_suffixes: Optional[List[str]] = None,
+        data_id_filter: Optional[str] = None
     ):
         self.store_records = self.create_stores()
         self.dest_dir = pathlib.Path(dest_dir)
@@ -39,6 +68,7 @@ class Catalogue:
             if data_suffixes is None
             else tuple(s.lower() for s in data_suffixes)
         )
+        self.data_id_filter = '' if data_id_filter is None else data_id_filter
         self.map_manager = MapManager(
             image_dir=pathlib.Path(dest_dir, 'maps'),
             use_stock_map=use_stock_map,
@@ -193,8 +223,10 @@ class Catalogue:
         def filter_ids(ids):
             count = 0
             for id_ in ids:
-                if (id_.lower().endswith(self.data_suffixes)
-                        or data_store_id not in ['s3', 'file']):
+                non_file_store = data_store_id not in ['s3', 'file']
+                suffix_ok = id_.lower().endswith(self.data_suffixes)
+                data_id_ok = re.search(self.data_id_filter, id_) is not None
+                if (suffix_ok or non_file_store) and data_id_ok:
                     yield id_
                     count += 1
                 if count == self.max_datasets:
@@ -228,7 +260,10 @@ class Catalogue:
         path = self.dest_dir / store_id / basename
         with open(str(path) + '.md', 'w') as fh:
             print(store_id, data_id)
-            desc = self.store_records[store_id].store.describe_data(data_id)
+            # desc = self.store_records[store_id].store.describe_data(data_id)
+            desc = _get_desc_with_timeout(self.store_records[store_id].store, data_id)
+            if desc is None:
+                return
             assert isinstance(desc, DatasetDescriptor)
             desc = cast(DatasetDescriptor, desc)
             title = (
@@ -643,7 +678,7 @@ class MapManager:
         max_dim_deg = max(w, h)
         if max_dim_deg > 45:
             max_dim_deg = 360
-        zoom_level = max(12, 3 + int(math.log2(360 / max_dim_deg)))
+        zoom_level = min(12, int(math.log2(360 / max_dim_deg)))
         if self.use_stock_map or large:
             # Stock imagery is low-res but fast, so we use it for large areas
             # or when explicitly requested.

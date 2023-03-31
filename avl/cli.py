@@ -305,27 +305,35 @@ def new():
     '--suffixes',
     type=str,
     default=None,
-    help='comma-separated list of data ID suffixes to include '
-    '(if omitted, include all suffixes)',
+    help='comma-separated list of data ID suffixes to include for s3 and file '
+    'stores (if omitted, include all suffixes)',
+)
+@click.option(
+    '--data-id-filter',
+    type=str,
+    default=None,
+    help='only include datasets whose ID contains this string',
 )
 def catalogue(
     max_datasets: Optional[int] = None,
     use_stock_map: bool = False,
     stores: Optional[str] = None,
     suffixes: Optional[str] = None,
+    data_id_filter: Optional[str] = None
 ):
     from avl.catalogue import Catalogue
 
     store_ids = None if stores is None else stores.split(',')
     data_suffixes = None if suffixes is None else suffixes.split(',')
-    catalogue = Catalogue(
+    catalogue_ = Catalogue(
         dest_dir='catalogue',
         max_datasets=max_datasets,
         use_stock_map=use_stock_map,
         store_ids=store_ids,
         data_suffixes=data_suffixes,
+        data_id_filter=data_id_filter
     )
-    catalogue.write_catalogue()
+    catalogue_.write_catalogue()
 
 
 if __name__ == '__main__':
