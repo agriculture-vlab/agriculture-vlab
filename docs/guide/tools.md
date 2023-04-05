@@ -5,8 +5,7 @@
 Verify given dataset conforms to the AVL dataset convention.
 
 CLI:
-```bash
-$ avl ver --help
+```text
 Usage: avl ver [OPTIONS] DATASET
 
   Verify given dataset conforms to the AVL dataset convention.
@@ -33,8 +32,7 @@ issues = verify_dataset(dataset)
 Generate AVL sample dataset into current working directory.
 
 CLI:
-```bash
-$ avl new --help
+```text
 Usage: avl new [OPTIONS]
 
   Generate AVL sample dataset into current working directory.
@@ -49,8 +47,7 @@ Generate the markdown page of all available AVL datasets in the AWS S3
 buckets.
 
 CLI:
-```bash
-$ avl cat --help
+```text
 Usage: avl cat [OPTIONS]
 
   Generate the markdown page of all available AVL datasets in the AWS S3
@@ -61,4 +58,25 @@ Options:
   --json                Write the JSON_FILE and exit. Ignored if JSON_FILE is
                         not given.
   --help                Show this message and exit.
+```
+
+## Generate full catalogue
+
+Generate a tree of markdown files with details of all specified stores and
+datasets.
+
+```text
+Usage: avl catalogue [OPTIONS]
+
+Options:
+  --max-datasets N       maximum number of datasets to catalogue per data
+                         store
+  --use-stock-map        use very low-res stock map tiles instead of web tiles
+  --stores TEXT          comma-separated IDs of stores to catalogue (if
+                         omitted, catalogue all stores)
+  --suffixes TEXT        comma-separated list of data ID suffixes to include
+                         for s3 and file stores (if omitted, include all
+                         suffixes)
+  --data-id-filter TEXT  only include datasets whose ID contains this string
+  --help                 Show this message and exit.
 ```
