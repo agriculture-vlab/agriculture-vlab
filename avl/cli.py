@@ -18,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
+from typing import Optional
 
 import click
 
@@ -29,21 +30,30 @@ def main():
 
 
 @main.command()
-@click.option('--output', '-o', 'output_dir_path',
-              metavar='OUTPUT_DIR',
-              default='.',
-              help='Output directory. Defaults to current working directory.')
-@click.option('--file', '-f', 'cache_file_path',
-              metavar='CACHE_FILE',
-              default=None,
-              help='File that holds cached datasets\' metadata (JSON format).')
-@click.option('--cache', 'write_cache_only',
-              is_flag=True,
-              help='Write the CACHE_FILE only and exit.'
-                   ' Ignored if JSON_FILE is not given.')
-def cat(output_dir_path='.',
-        cache_file_path=None,
-        write_cache_only=False):
+@click.option(
+    '--output',
+    '-o',
+    'output_dir_path',
+    metavar='OUTPUT_DIR',
+    default='.',
+    help='Output directory. Defaults to current working directory.',
+)
+@click.option(
+    '--file',
+    '-f',
+    'cache_file_path',
+    metavar='CACHE_FILE',
+    default=None,
+    help='File that holds cached datasets\' metadata (JSON format).',
+)
+@click.option(
+    '--cache',
+    'write_cache_only',
+    is_flag=True,
+    help='Write the CACHE_FILE only and exit.'
+    ' Ignored if JSON_FILE is not given.',
+)
+def cat(output_dir_path='.', cache_file_path=None, write_cache_only=False):
     """
     Generate the markdown catalogue of all available AVL datasets
     in the AWS S3 buckets.
@@ -77,10 +87,12 @@ def cat(output_dir_path='.',
         from xcube.core.store import new_data_store
         import traceback
 
-        store = new_data_store('s3',
-                               root='agriculture-vlab-data-staging',
-                               max_depth=5,
-                               storage_options=dict(anon=True))
+        store = new_data_store(
+            's3',
+            root='agriculture-vlab-data-staging',
+            max_depth=5,
+            storage_options=dict(anon=True),
+        )
         descriptors = []
         for data_id in store.get_data_ids():
             click.echo(f'Fetching descriptor for {data_id!r}...')
@@ -91,9 +103,10 @@ def cat(output_dir_path='.',
                 click.echo(f'Error: {e}')
                 traceback_lines = list(traceback.format_tb(e.__traceback__))
                 descriptors.append(
-                    dict(data_id=data_id,
-                         error=dict(message=f'{e}',
-                                    traceback=traceback_lines))
+                    dict(
+                        data_id=data_id,
+                        error=dict(message=f'{e}', traceback=traceback_lines),
+                    )
                 )
         return descriptors
 
@@ -115,7 +128,9 @@ def cat(output_dir_path='.',
             for descriptor in descriptors:
                 data_id = descriptor.get('data_id', '?')
                 encoded_data_id = data_id.replace('/', '_')
-                rel_data_id_path = f'{datasets_dir_name}/{encoded_data_id}.json'
+                rel_data_id_path = (
+                    f'{datasets_dir_name}/{encoded_data_id}.json'
+                )
                 abs_data_id_path = f'{catalogue_dir}/{rel_data_id_path}'
                 has_error = 'error' in descriptor
                 fp_catalogue.write(
@@ -148,12 +163,14 @@ def cat(output_dir_path='.',
 
 
 @main.command()
-@click.argument('dataset_path',
-                metavar='DATASET')
-@click.option('--level', '-l',
-              type=click.types.Choice(['ERROR', 'WARNING']),
-              default='WARNING',
-              help='Level of messages to include.')
+@click.argument('dataset_path', metavar='DATASET')
+@click.option(
+    '--level',
+    '-l',
+    type=click.types.Choice(['ERROR', 'WARNING']),
+    default='WARNING',
+    help='Level of messages to include.',
+)
 def ver(dataset_path: str, level: str):
     """
     Verify given dataset conforms to the AVL dataset convention.
@@ -168,8 +185,9 @@ def ver(dataset_path: str, level: str):
     else:
         num_warnings = len([1 for level, _ in issues if level == WARNING])
         num_errors = len([1 for level, _ in issues if level == ERROR])
-        click.echo(f'{num_errors} error(s)'
-                   f' and {num_warnings} warnings(s) found:')
+        click.echo(
+            f'{num_errors} error(s)' f' and {num_warnings} warnings(s) found:'
+        )
         for level, message in issues:
             click.echo(f'{level}: {message}')
         if num_errors > 0:
@@ -219,8 +237,8 @@ def new():
                 units='mg/kg',
                 color_bar_name='bone',
                 color_value_min=0.0,
-                color_value_max=0.75
-            )
+                color_value_max=0.75,
+            ),
         ),
         # A quality flags variable
         (
@@ -230,33 +248,92 @@ def new():
                 long_name='Variable B',
                 # standard_name='...',  # if exists
                 flag_meanings='quality_good'
-                              ' sensor_nonfunctional'
-                              ' outside_valid_range',
+                ' sensor_nonfunctional'
+                ' outside_valid_range',
                 flag_values='1, 2, 3',
                 color_bar_name='tab10',
                 color_value_min=0,
-                color_value_max=10
-            )
-        )
+                color_value_max=10,
+            ),
+        ),
     ]
 
-    write_zarr('dataset_global.zarr',
-               xy_size=(7200, 3600),
-               xy_tile_size=720,
-               xy_res=360 / 7200,
-               variables=variables)
+    write_zarr(
+        'dataset_global.zarr',
+        xy_size=(7200, 3600),
+        xy_tile_size=720,
+        xy_res=360 / 7200,
+        variables=variables,
+    )
 
     crs_utm_33n = pyproj.crs.CRS(32633)
-    xy_start = from_crs84((10., 52.), crs_utm_33n)
+    xy_start = from_crs84((10.0, 52.0), crs_utm_33n)
 
-    write_zarr('dataset_utm33n.zarr',
-               xy_size=(2048, 2048),
-               xy_tile_size=512,
-               xy_start=xy_start,
-               xy_names=('x', 'y'),
-               xy_units='meters',
-               crs=crs_utm_33n,
-               variables=variables)
+    write_zarr(
+        'dataset_utm33n.zarr',
+        xy_size=(2048, 2048),
+        xy_tile_size=512,
+        xy_start=xy_start,
+        xy_names=('x', 'y'),
+        xy_units='meters',
+        crs=crs_utm_33n,
+        variables=variables,
+    )
+
+
+@main.command()
+@click.option(
+    '--max-datasets',
+    metavar='N',
+    type=int,
+    default=None,
+    help='maximum number of datasets to catalogue per data store',
+)
+@click.option(
+    '--use-stock-map',
+    is_flag=True,
+    help='use very low-res stock map tiles instead of web tiles',
+)
+@click.option(
+    '--stores',
+    type=str,
+    default=None,
+    help='comma-separated IDs of stores to catalogue '
+    '(if omitted, catalogue all stores)',
+)
+@click.option(
+    '--suffixes',
+    type=str,
+    default=None,
+    help='comma-separated list of data ID suffixes to include for s3 and file '
+    'stores (if omitted, include all suffixes)',
+)
+@click.option(
+    '--data-id-filter',
+    type=str,
+    default=None,
+    help='only include datasets whose ID contains this string',
+)
+def catalogue(
+    max_datasets: Optional[int] = None,
+    use_stock_map: bool = False,
+    stores: Optional[str] = None,
+    suffixes: Optional[str] = None,
+    data_id_filter: Optional[str] = None
+):
+    from avl.catalogue import Catalogue
+
+    store_ids = None if stores is None else stores.split(',')
+    data_suffixes = None if suffixes is None else suffixes.split(',')
+    catalogue_ = Catalogue(
+        dest_dir='catalogue',
+        max_datasets=max_datasets,
+        use_stock_map=use_stock_map,
+        store_ids=store_ids,
+        data_suffixes=data_suffixes,
+        data_id_filter=data_id_filter
+    )
+    catalogue_.write_catalogue()
 
 
 if __name__ == '__main__':
