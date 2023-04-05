@@ -23,7 +23,7 @@ def _retry_failed(retry_state):
 
 def _get_desc_with_timeout(store, data_id) -> Optional[DatasetDescriptor]:
     wait_interval = 0.5  # seconds
-    number_of_waits = 120
+    number_of_waits = 240
     result_queue = multiprocessing.Queue()
 
     def get_desc():
@@ -260,8 +260,9 @@ class Catalogue:
         path = self.dest_dir / store_id / basename
         with open(str(path) + '.md', 'w') as fh:
             print(store_id, data_id)
-            # desc = self.store_records[store_id].store.describe_data(data_id)
-            desc = _get_desc_with_timeout(self.store_records[store_id].store, data_id)
+            desc = _get_desc_with_timeout(
+                self.store_records[store_id].store, data_id
+            )
             if desc is None:
                 return
             assert isinstance(desc, DatasetDescriptor)
@@ -271,9 +272,15 @@ class Catalogue:
                 if hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)
                 else data_id
             )
-            fh.write(f'# Dataset: {title}\n\n')
-            fh.write(f'**Dataset identifier:** {data_id}<br>\n')
-            fh.write(f'**Data store:** {store_id}<br>\n')
+            # It would be safer also to Markdown-escape the title, but
+            # if we do that then MkDocs shows the ugly, escaped form in
+            # the navigation bar at the top.
+            fh.write(
+                f'# Dataset: {title}\n\n'
+                f'**Dataset identifier:** '
+                f'{self.escape_for_markdown(data_id)}<br>\n'
+                f'**Data store:** {store_id}<br>\n'
+            )
             # TODO: link to open in viewer?
             open_command = self.store_records[store_id].get_code_snippet(
                 data_id
@@ -513,9 +520,9 @@ class Catalogue:
                 .replace('<', '&lt;')
                 .replace('>', '&gt;')
             )
-            if re.match('https?://', content):
+            if re.match('https?://[^ ]+$', content):
                 return f'[{escaped_text}]({content})'
-            elif re.match('www[.]', content):
+            elif re.match('www[.][^ ]+$', content):
                 return f'[{escaped_text}](http://{content})'
             else:
                 return escaped_text
