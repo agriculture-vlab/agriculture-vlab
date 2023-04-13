@@ -5,8 +5,10 @@
 # installed from its GitHub repository, since there are no PyPI releases for
 # it.
 
+# This list deliberately omits cartopy, which won't install on ReadTheDocs
+# and isn't needed for documentation generation.
+
 boto3>=1.20.24
-cartopy>=0.21.1
 click>=8.0
 matplotlib>=3.0.0
 numpy>=1.17
