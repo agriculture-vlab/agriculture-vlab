@@ -1,3 +1,16 @@
+## Changes in version 0.3.0
+
+ * Add `catalogue` module and associated CLI command `avl catalogue` for
+   catalogue generation.
+
+ * Update and expand design documentation.
+
+ * Update and expand user guide.
+
+ * Add xcube data store list to datasets documentation.
+
+ * Update documentation of test procedures and test results.
+
 ## Changes in version 0.2.1
 
  * Update, expand, and reorganize documentation: design documents, exploitation
