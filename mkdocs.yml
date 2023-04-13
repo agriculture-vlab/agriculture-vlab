@@ -22,7 +22,7 @@ nav:
     - Radar datasets: datasets/radar.md
     - Vector datasets: datasets/vector.md
     - Open datasets: datasets/open_datasets.md
-    - xcube store datasets: datasets/xcube.mdd
+    - xcube store datasets: datasets/xcube.md
   - Design:
     - Overview: design/index.md
     - Architecture and common components: design/common.md
