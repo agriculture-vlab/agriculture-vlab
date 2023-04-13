@@ -32,19 +32,20 @@ and descriptions of the AVL-specific command-line and Python interfaces.
 
 AVL provides a variety of EO data products from multiple sources (or
 collections). They follow a well-defined dataset convention and are grouped
-according to sensor type.
+according to sensor type. Most of these datasets are provided via the
+thematic processing system but many are also available in the exploitation
+system via various xcube data stores.
 
 1.  [Dataset conventions](datasets/conventions.md) for raster datasets
-2.  [Altimetric datasets](datasets/altimetric.md)
-3.  [Atmospheric datasets](datasets/atmospheric.md)
-4.  [Optical datasets](datasets/optical.md)
+2.  [Altimetric datasets](datasets/altimetric.md) (processing system)
+3.  [Atmospheric datasets](datasets/atmospheric.md) (processing system)
+4.  [Optical datasets](datasets/optical.md) (processing system)
 5.  [Passive microwave datasets](datasets/passive_microwave.md)
-6.  [Radar datasets](datasets/radar.md)
-7.  [Vector datasets](datasets/vector.md)
-
-Additionally, AVL provides access to other open data sets: 
-
-8.  [Open datasets](datasets/open_datasets.md) 
+    (processing system)
+6.  [Radar datasets](datasets/radar.md) (processing system)
+7.  [Open datasets](datasets/open_datasets.md) (processing system) 
+8.  [Vector datasets](datasets/vector.md) (exploitation system)
+9.  [xcube data store datasets](datasets/xcube.md) (exploitation system) 
 
 ### Design
 

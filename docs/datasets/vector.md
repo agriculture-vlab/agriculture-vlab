@@ -1,5 +1,8 @@
 # Vector datasets
 
+These datasets are available through the `xcube_geodb` API in the exploitation
+system.
+
 ### EuroCrops
 
 -   **Source:** <https://github.com/maja601/EuroCrops>

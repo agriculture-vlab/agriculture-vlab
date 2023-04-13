@@ -1,6 +1,6 @@
 # Open Datasets
 
-Besides the datasets that are searchable via the Dataset Explorer module, AVl has the possibility to give access to users to other open datasets.
+Besides the datasets that are searchable via the Dataset Explorer module, AVL has the possibility to give access to users to other open datasets.
 These datasets can be mounted as repositories in the user workspace. Users can browse them and download items to their local workspace. 
 ***
 ### Capella SAR
