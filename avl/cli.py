@@ -321,7 +321,7 @@ def catalogue(
     suffixes: Optional[str] = None,
     data_id_filter: Optional[str] = None
 ):
-    from avl.catalogue import Catalogue
+    from avl._catalogue import Catalogue
 
     store_ids = None if stores is None else stores.split(',')
     data_suffixes = None if suffixes is None else suffixes.split(',')
