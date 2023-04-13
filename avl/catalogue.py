@@ -529,7 +529,7 @@ class StoreRecord:
     """Creates and wraps a store with some catalogue-relevant metadata"""
 
     def __init__(
-        self, store_id: str, desc: str, var_name: str, store_args: Dict
+        self, store_id: str, desc: str, var_name: str, store_args: dict
     ):
         """Initialize a store record
 
