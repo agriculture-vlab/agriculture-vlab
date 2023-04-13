@@ -8,11 +8,6 @@ from functools import cached_property, partial
 from typing import Any, Dict, Optional, List, Tuple, cast
 import multiprocessing
 
-import cartopy
-import cartopy.io.img_tiles
-import matplotlib.patches as patches
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
 from tenacity import retry, stop_after_attempt, wait_exponential
 from xcube.core.store import new_data_store, DatasetDescriptor
 
@@ -638,6 +633,12 @@ class MapManager:
             output_path: the path to which to write the map. The output format
                 is determined by the file extension of this path.
         """
+
+        import cartopy.io.img_tiles
+        import matplotlib.patches as patches
+        from matplotlib.backends.backend_agg import \
+            FigureCanvasAgg as FigureCanvas
+        from matplotlib.figure import Figure
 
         # We round bounding box values because it sometimes breaks for
         # very-nearly-round values, e.g. (-180, -60, 179.99999999, 80.0).
