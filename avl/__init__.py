@@ -22,4 +22,4 @@
 
 """Python libraries for the Agriculture Virtual Laboratory"""
 
-__version__ = '0.3.0-beta.3'
+__version__ = '0.3.0'
