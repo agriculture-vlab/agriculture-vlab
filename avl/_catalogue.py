@@ -308,14 +308,11 @@ class Catalogue:
                 fh.write(
                     f'## Bounding box map\n\n'
                     f'![Bounding box map]({basename + ".png"})<br>\n'
-                    '<span style="font-size: x-small">Map tiles by '
-                    '<a href="http://stamen.com">Stamen Design</a>, under '
-                    '<a href="http://creativecommons.org/licenses/by/3.0">'
-                    'CC BY 3.0</a>. Data by '
+                    '<span style="font-size: x-small">Map tiles and data from '
                     '<a href="http://openstreetmap.org">OpenStreetMap</a>,'
                     ' under '
                     '<a href="http://www.openstreetmap.org/copyright">'
-                    'ODbL</a>.</span>\n\n'
+                    'the ODbL</a>.</span>\n\n'
                 )
             if valid_attrs:
                 fh.write('## Basic information\n\n')
