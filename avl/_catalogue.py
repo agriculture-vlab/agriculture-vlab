@@ -1,46 +1,51 @@
 import math
 import os
 import pathlib
-import queue
 import re
 import shutil
 from functools import cached_property, partial
 from typing import Any, Dict, Optional, List, Tuple, cast
-import multiprocessing
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 from xcube.core.store import new_data_store, DatasetDescriptor
+import signal
 
 
 def _retry_failed(retry_state):
     print(f'Too many retries. {retry_state}')
 
 
+def handler(signum, frame):
+    raise Exception("timeout")
+
+
 def _get_desc_with_timeout(store, data_id) -> Optional[DatasetDescriptor]:
-    wait_interval = 0.5  # seconds
-    number_of_waits = 240
-    result_queue = multiprocessing.Queue()
+    """ Get dataset description with a 60-second timeout
 
-    def get_desc():
-        result_queue.put(store.describe_data(data_id))
+    Uses signals, so only works on POSIX systems.
 
-    p = multiprocessing.Process(target=get_desc)
-    p.start()
-    for i in range(number_of_waits):
-        p.join(wait_interval)
-        if not p.is_alive():
-            break
+    Args:
+        store: an xcube data store
+        data_id: ID of a dataset in the store
 
-    if p.is_alive():
-        print(f'{data_id} timed out after {wait_interval * number_of_waits} '
-              f'seconds.')
-        p.terminate()
-        p.join()
+    Returns: a descriptor for the dataset, if the store returned this
+        within the time limit; otherwise None
 
+    """
+    result = None
+    signal.alarm(60)
     try:
-        return result_queue.get(block=True, timeout=wait_interval)
-    except queue.Empty:
-        return None
+        result = store.describe_data(data_id)
+        print('describe_data returned')
+    except Exception as e:
+        if e.args == ('timeout', ):
+            print('describe_data timed out')
+        else:
+            raise e
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, handler)
+    return result
 
 
 class Catalogue:
@@ -247,26 +252,33 @@ class Catalogue:
             if empty:
                 fh.write('## There are no datasets available in this store.')
 
-    @retry(stop=stop_after_attempt(5),
-           wait=wait_exponential(multiplier=1, min=10, max=120),
+    @retry(stop=stop_after_attempt(2),
+           wait=wait_exponential(multiplier=1, min=30, max=120),
            retry_error_callback=_retry_failed)
     def write_catalogue_for_dataset(self, store_id: str, data_id: str):
         basename = self.data_id_to_filename(data_id)
         path = self.dest_dir / store_id / basename
+        print('Fetching:', store_id, data_id)
+        store_record = self.store_records[store_id]
+        store = store_record.store
+        # fsspec is not fork-safe so we skip the timeout for s3;
+        # timeout should in any case only be needed for CCI, CDS, CMEMS,
+        # and SH.
+        desc = (
+            store.describe_data(data_id)
+            if store_record.store_args['data_store_id'] == 's3'
+            else _get_desc_with_timeout(store, data_id)
+        )
+        if desc is None:
+            return
+        assert isinstance(desc, DatasetDescriptor)
+        desc = cast(DatasetDescriptor, desc)
+        title = (
+            desc.attrs.get('title', data_id)
+            if hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)
+            else data_id
+        )
         with open(str(path) + '.md', 'w') as fh:
-            print(store_id, data_id)
-            desc = _get_desc_with_timeout(
-                self.store_records[store_id].store, data_id
-            )
-            if desc is None:
-                return
-            assert isinstance(desc, DatasetDescriptor)
-            desc = cast(DatasetDescriptor, desc)
-            title = (
-                desc.attrs.get('title', data_id)
-                if hasattr(desc, 'attrs') and isinstance(desc.attrs, dict)
-                else data_id
-            )
             # It would be safer also to Markdown-escape the title, but
             # if we do that then MkDocs shows the ugly, escaped form in
             # the navigation bar at the top.
@@ -277,9 +289,7 @@ class Catalogue:
                 f'**Data store:** {store_id}<br>\n'
             )
             # TODO: link to open in viewer?
-            open_command = self.store_records[store_id].get_code_snippet(
-                data_id
-            )
+            open_command = store_record.get_code_snippet(data_id)
             fh.write(
                 f'## How to open this dataset in AVL JupyterLab '
                 f'&emsp;{self._make_copy_button("code", open_command)}\n'
