@@ -6,28 +6,24 @@ from typing import List
 
 import boto3
 import pytest
-from moto import mock_s3, mock_iam, mock_cloudwatch, mock_sns
+from moto import mock_aws
 
 from avl import _admin
 from avl._admin import BucketAccessUserCreator
 
 
-@mock_s3
-@mock_iam
-@mock_cloudwatch
-@mock_sns
+@mock_aws
 class TestAdmin:
 
     @pytest.fixture(autouse=True)
     def env_vars(self):
-        # The @mock_s3 and @mock_iam decorators *should* make the environment
-        # variables superfluous, but best to play it safe to avoid any danger
-        # of manipulating real AWS resources by mistake.
+        # The @mock_aws decorator *should* make the environment variables
+        # superfluous, but best to play it safe to avoid any danger of
+        # manipulating real AWS resources by mistake.
 
-        os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-        os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-        os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-        os.environ['AWS_SESSION_TOKEN'] = 'testing'
+        for aws_var in ['ACCESS_KEY_ID', 'SECRET_ACCESS_KEY', 'SECURITY_TOKEN',
+                        'SESSION_TOKEN']:
+            os.environ[f'AWS_{aws_var}'] = 'testing'
 
     def test_create_resources(self):
         creator_tag = 'creator_name'
