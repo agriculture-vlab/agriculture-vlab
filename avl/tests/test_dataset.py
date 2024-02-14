@@ -12,7 +12,7 @@ def test_get_geospatial_attrs():
     attrs = dataset.get_geospatial_attrs(
         (-12, -34, 56, 78),
         (1, 1),
-        pyproj.crs.CRS('CRS84'))
+        pyproj.crs.CRS('OGC:CRS84'))
     assert 'POLYGON((-12 -34, -12 78, 56 78, 56 -34, -12 -34))' == \
            attrs['geospatial_bounds']
 

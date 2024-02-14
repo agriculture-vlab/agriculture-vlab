@@ -28,7 +28,7 @@ import pandas as pd
 import pyproj
 import xarray as xr
 
-CRS_CRS84 = pyproj.crs.CRS.from_string("CRS84")
+CRS_CRS84 = pyproj.crs.CRS.from_string("OGC:CRS84")
 
 DEFAULT_METADATA = dict(
     Conventions="CF-1.7",
@@ -327,7 +327,7 @@ def get_geospatial_attrs(
         geospatial_lat_min=lat_min,
         geospatial_lat_max=lat_max,
         geospatial_lat_resolution=lat_res,
-        geospatial_bounds_crs='CRS84',
+        geospatial_bounds_crs='OGC:CRS84',
         geospatial_bounds=f'POLYGON(('
                           f'{lon_min} {lat_min}, '
                           f'{lon_min} {lat_max}, '
