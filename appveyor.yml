@@ -1,8 +1,8 @@
 version: '{build}'
 
 image:
-  - macos
   - Ubuntu2004
+  - macos
 
 configuration: Release
 
@@ -27,7 +27,7 @@ for:
 build_script:
   - ./micromamba shell init -s bash -p ~/micromamba
   - source ~/.bashrc
-  - ls -a ~
+  - source ~/.profile
   - hash -r
   - mkdir -p ~/micromamba/pkgs/
   - export MAMBA_ROOT_PREFIX=~/micromamba
