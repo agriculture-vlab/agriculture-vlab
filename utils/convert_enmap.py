@@ -5,7 +5,6 @@
 import os
 import pathlib
 import argparse
-import functools
 import tarfile
 import zipfile
 import xml.etree
@@ -60,8 +59,15 @@ def main():
         help="Higher output compression. ~25%% smaller. "
         "Compression (but not decompression) much slower.",
     )
+    parser.add_argument(
+        "--extract-only",
+        "-e",
+        action="store_true",
+        help="Just extract data from sub-archives, don't convert to Zarr.",
+    )
     parser.add_argument("--verbose", "-v", action="count", default=0)
     args = parser.parse_args()
+
     if args.verbose > 1:
         logging.basicConfig(level=logging.DEBUG)
     elif args.verbose > 0:
@@ -70,23 +76,43 @@ def main():
         logging.basicConfig(level=logging.WARN)
     if args.tempdir is None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            convert(
-                args.input_filename, args.output_dir, temp_dir, args.compress
+            process(
+                args.input_filename,
+                args.output_dir,
+                temp_dir,
+                args.compress,
+                args.extract_only,
             )
     else:
         temp_dir = os.path.expanduser(args.tempdir)
         shutil.rmtree(temp_dir, ignore_errors=True)
         os.mkdir(temp_dir)
-        convert(
+        process(
             args.input_filename,
             os.path.expanduser(args.output_dir),
             temp_dir,
             args.compress,
+            args.extract_only,
         )
 
 
+def process(
+    input_filename: str,
+    output_dir: str,
+    temp_dir: str,
+    compress: bool = False,
+    extract_only: bool = False,
+):
+    if extract_only:
+        paths = extract_archives(input_filename, temp_dir)
+        for path in paths:
+            shutil.copytree(path, pathlib.Path(output_dir) / path.name)
+    else:
+        convert(input_filename, output_dir, temp_dir, compress)
+
+
 def convert(
-    input_filename: str, output_dir: str, temp_dir: str, compress=False
+    input_filename: str, output_dir: str, temp_dir: str, compress: bool = False
 ):
     data_dirs = extract_archives(input_filename, temp_dir)
     for data_dir in data_dirs:
@@ -209,8 +235,8 @@ def add_metadata(ds: xr.Dataset, data_dir: pathlib.Path):
 
 
 def extract_archives(
-    archive_path: os.PathLike, dest_dir: os.PathLike
-) -> Iterable[os.PathLike]:
+    archive_path: os.PathLike | str, dest_dir: os.PathLike | str
+) -> Iterable[pathlib.Path]:
     dest_path = pathlib.Path(dest_dir)
     archive_path = pathlib.Path(archive_path)
     if archive_path.name.endswith(".tar.gz"):
