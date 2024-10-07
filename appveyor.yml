@@ -25,11 +25,13 @@ for:
     - wget -qO- https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba --strip-components=1
 
 build_script:
+  - ./micromamba --version
   - ./micromamba shell init -s bash --root-prefix ~/micromamba
   - source ~/.bashrc
   - source ~/.profile
   - hash -r
   - mkdir -p ~/micromamba/pkgs/
+  - mkdir -p ~/.mamba/pkgs/
   - export MAMBA_ROOT_PREFIX=~/micromamba
   - export MAMBA_EXE=$(pwd)/micromamba
   - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
