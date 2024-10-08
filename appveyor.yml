@@ -45,7 +45,7 @@ build_script:
   - export MAMBA_ROOT_PREFIX=~/micromamba
   - export MAMBA_EXE=$(pwd)/micromamba
   - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
-  - micromamba create --name avl --file environment.yml
+  - micromamba create --name avl --file environment.yml --channel conda-forge
   - micromamba activate avl
   - pip install --no-deps .
   - python3 -m pytest
