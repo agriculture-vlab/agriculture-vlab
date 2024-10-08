@@ -44,7 +44,9 @@ build_script:
   - mkdir -p ~/.mamba/pkgs/
   - export MAMBA_ROOT_PREFIX=~/micromamba
   - export MAMBA_EXE=$(pwd)/micromamba
-  - . $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh
+  # NB: the below changes to $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh in
+  # micromamba v2.
+  - . $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
   - micromamba create --name avl --file environment.yml --channel conda-forge
   - micromamba activate avl
   - pip install --no-deps .
