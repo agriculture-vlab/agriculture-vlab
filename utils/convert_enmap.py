@@ -43,7 +43,7 @@ def main():
         "or a .tar.gz containing multiple Zips",
     )
     parser.add_argument(
-        "output_dir", type=str, help="Write output Zarrs to this directory."
+        "output_dir", type=str, help="Write output to this directory."
     )
     parser.add_argument(
         "--tempdir",
