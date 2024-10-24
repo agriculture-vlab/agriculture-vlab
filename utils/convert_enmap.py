@@ -181,7 +181,7 @@ def add_metadata(ds: xr.Dataset, data_dir: pathlib.Path):
     }
     ds.attrs.update(global_attrs)
 
-    var_attrs = {
+    var_attrs: dict[str, tuple] = {
         "reflectance": (
             "reflectance",
             "surface_bidirectional_reflectance",
@@ -245,7 +245,7 @@ def extract_archives(
         outer_path = dest_path / "outer-archive"
         LOGGER.info(f"Extracting {archive_path.name}")
         with tarfile.open(archive_path) as tgz_file:
-            tgz_file.extractall(path=outer_path)
+            tgz_file.extractall(path=outer_path, filter="data")
     else:
         # Assume it's a zip and skip the outer archive
         # extraction step.
