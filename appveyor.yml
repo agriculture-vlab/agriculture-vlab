@@ -47,7 +47,7 @@ build_script:
   # NB: the below changes to $MAMBA_ROOT_PREFIX/etc/profile.d/mamba.sh in
   # micromamba v2.
   - . $MAMBA_ROOT_PREFIX/etc/profile.d/micromamba.sh
-  - micromamba create --name avl --file environment.yml --channel conda-forge
+  - micromamba create --yes --name avl --file environment.yml --channel conda-forge
   - micromamba activate avl
   - pip install --no-deps .
   - python3 -m pytest
