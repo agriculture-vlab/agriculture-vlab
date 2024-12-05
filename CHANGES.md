@@ -1,3 +1,21 @@
+## Changes in version 0.3.1
+
+ * Update map tile attribution text
+
+ * Catalogue generation: re-implement time-outs with signals
+
+ * Update CRS84 identifier to OGC:CRS84
+
+ * Update tests to work with moto 5
+
+ * Multiple updates to AppVeyor configuration
+
+ * Add EnMAP-to-Zarr conversion script
+
+ * Fix incorrect bounding box in convert_enmap script
+
+ * Update software reuse file
+
 ## Changes in version 0.3.0
 
  * Add `catalogue` module and associated CLI command `avl catalogue` for
