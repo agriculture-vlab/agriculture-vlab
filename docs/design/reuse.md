@@ -6,24 +6,24 @@
 | ----------------- | ------- | --------------------------------------------------------  | ------------ | ------------------------------------------------- |
 | apache commons    | various | Components of Apache Commons collection                   | Apache 2.0   | <https://commons.apache.org>                      |
 | docker            | 20.10.7 | Software container packaging, management, and deployment  | Apache 2.0   | <https://www.docker.com>                          |
-| gdal              | 3.2.4+  | Geospatial data format conversion                         | MIT          | <https://gdal.org>                                |
-| geotools          | 26.0    | Java geospatial library                                   | LGPL         | <https://geotools.org>                            |
-| hibernate         | 5.4.7   | Java ORM library                                          | LGPL v2.1    | <https://hibernate.org>                           |
-| jackson           | 2.13    | JSON/XML serialization and deserialization                | Apache 2.0   | <https://github.com/FasterXML/jackson>            |
-| jna               | 5.5.0   | Java to native libraries bridge                           | Apache 2.0   | <https://github.com/java-native-access/jna>       |
+| gdal              | 3.7.2   | Geospatial data format conversion                         | MIT          | <https://gdal.org>                                |
+| geotools          | 29.1    | Java geospatial library                                   | LGPL         | <https://geotools.org>                            |
+| hibernate         | 5.6.15  | Java ORM library                                          | LGPL v2.1    | <https://hibernate.org>                           |
+| jackson           | 2.17.1  | JSON/XML serialization and deserialization                | Apache 2.0   | <https://github.com/FasterXML/jackson>            |
+| jna               | 5.14.0  | Java to native libraries bridge                           | Apache 2.0   | <https://github.com/java-native-access/jna>       |
 | jquery            | 3.2.1   | General purpose javascript library                        | MIT          | <https://jquery.com>                              |
-| jsch              | 0.1.55  | Java SSH client                                           | BSD          | <http://www.jcraft.com/jsch>                      |
+| jsch              | 0.2.17  | Java SSH client                                           | BSD          | <http://www.jcraft.com/jsch>                      |
 | jsplumb           | 2.4.2   | Javascript library for graph building (community edition) | jsPlumb      | <https://jsplumbtoolkit.com/>                     |
-| jts               | 1.18.2  | Java topology suite library for geometries                | EPL 2.0      | <http://locationtech.github.io/jts>               |
-| openjdk           | 8u212+  | Java runtime and development libraries                    | GPL v2+cpath | <http://openjdk.java.net>                         |
+| jts               | 1.19    | Java topology suite library for geometries                | EPL 2.0      | <http://locationtech.github.io/jts>               |
+| openjdk           | 21.0.2+ | Java runtime and development libraries                    | GPL v2+cpath | <http://openjdk.java.net>                         |
 | orfeo toolbox     | 7.3.0   | Geospatial image processing toolbox                       | Apache 2.0   | <https://www.orfeo-toolbox.org>                   |
-| postgresql        | 11.0    | Database server                                           | Postgres/MIT | <https://www.postgresql.org>                      |
+| postgresql        | 13.0    | Database server                                           | Postgres/MIT | <https://www.postgresql.org>                      |
 | postgis           | 3.1.2   | PostgreSQL geospatial extensions                          | Postgres/MIT | <https://postgis.net>                             |
-| pty4j             | 0.11.4  | Java terminal emulator                                    | EPL 1.0      | <https://github.com/JetBrains/pty4j>              |
 | reactor           | 2.0.8   | Non-blocking messaging bus abstraction library            | Apache 2.0   | <https://projectreactor.io/>                      |
 | snap              | 8.0.5   | Sentinels Application Platform                            | GPL v3       | <http://step.esa.int/main/download/snap-download> |
-| spring            | 5.2.3   | Java framework for microservices                          | Apache 2.0   | <https://spring.io>                               |
-| velocity          | 1.7     | Script engine                                             | Apache 2.0   | <https://velocity.apache.org>                     |
+| spring            | 5.3.32  | Java framework for microservices                          | Apache 2.0   | <https://spring.io>                               |
+| spring boot       | 2.7.18  | Java framework for stand-alone Spring-based applications  | Apache 2.0   | <https://spring.io/spring-boot>                   |
+| velocity          | 2.3     | Script engine                                             | Apache 2.0   | <https://velocity.apache.org>                     |
 
 ---
 
