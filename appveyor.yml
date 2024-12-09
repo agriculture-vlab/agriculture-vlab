@@ -16,14 +16,14 @@ for:
       - image: macos
       - image: Previous macos  # not usually needed, but might use it while debugging
   install:
-    - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/1.5.10 | tar -xvj bin/micromamba
+    - curl -Ls https://micro.mamba.pm/api/micromamba/osx-64/latest | tar -xvj bin/micromamba
     - mv bin/micromamba ./micromamba
 -
   matrix:
     only:
       - image: Ubuntu2204
   install:
-    - curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/1.5.10 | tar -xvj bin/micromamba
+    - curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
     - mv bin/micromamba ./micromamba
 
 build_script:
