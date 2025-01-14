@@ -1,3 +1,7 @@
+## Changes in version 0.3.2
+
+ * Restrict the Zarr dependency to <3.0.0
+
 ## Changes in version 0.3.1
 
  * Update map tile attribution text
